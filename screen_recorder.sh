@@ -3,17 +3,30 @@
 RECORDINGS_PATH="/Volumes/T7/code_videos/Rushes"
 SCREEN_DISPLAY=Capture
 
-function archive_current {
-	#declare field_width=8;
+:<<-"COMMENT"
+This function was to archive the `current` directory
+in binary directories. It is now here as legacy code
+and isn't used anymore
+COMMENT
+function archive_current_binary {
+	declare field_width=8;
 	declare last;
-	#last="$(ls -1 "${PROJECT_PATH:?}" | grep -E '[0-1]' | tail -n 1)";
-	last="$(ls -1 "${PROJECT_PATH:?}" | grep -E '[0-9]' | sort -h | tail -n 1)";
-	#last="$(echo $last | bc --ibase=2)";
+	last="$(ls -1 "${PROJECT_PATH:?}" | grep -E '[0-1]' | tail -n 1)";
+	last="$(echo $last | bc --ibase=2)";
 	last="$((last + 1))";
-	#last="$(echo $last | bc --obase=2)"
-	#if test "${#last}" -gt "${field_width}";
-	#then error_exit "wrapped"; fi
-	#last="$(printf "%0${field_width}d\n" "$last")";
+	last="$(echo $last | bc --obase=2)"
+	if test "${#last}" -gt "${field_width}";
+	then error_exit "wrapped"; fi
+	last="$(printf "%0${field_width}d\n" "$last")";
+	if test -f "${CURRENT:?}/pids";
+	then error_exit "programm still running";  fi
+	mv -i "${CURRENT}" "${PROJECT_PATH:?}/${last}"
+}
+
+function archive_current {
+	declare last;
+	last="$(ls -1 "${PROJECT_PATH:?}" | grep -E '[0-9]' | sort -h | tail -n 1)";
+	last="$((last + 1))";
 	if test -f "${CURRENT:?}/pids";
 	then error_exit "programm still running";  fi
 	mv -i "${CURRENT}" "${PROJECT_PATH:?}/${last}"
