@@ -48,8 +48,11 @@ backend, you will be able to use it by updating its name in the script
 The script uses the following path logic (edit this in the script as needed):
 
 By default:
-- Recordings are saved under `/Volumes/T7/code_videos/Rushes`
+- Recordings are saved under `/Volumes/T7/prefered/path/<project_name>
   - `T7` is the name of my SSD drive
+  - `prefered/path` is a path within this drive
+  - `<project_name>` is the name of the project provided on the command line.
+  The corresponding folder **must** exist before the script runs.
   - Each project gets its own folder
   - Each session gets stored in `0/`, `1/`, `2/`, etc. **Automatically**
 
