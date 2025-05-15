@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
 
 RECORDINGS_PATH="/Volumes/T7/code_videos/Rushes"
-PROJECT_NAME="screen_recorder"
-PROJECT_PATH="${RECORDINGS_PATH}/${PROJECT_NAME}"
-CURRENT="${PROJECT_PATH}/current"
 SCREEN_DISPLAY=Capture
-PIDS_FILE="${CURRENT}/pids"
+
+function archive_current {
+	declare field_width=5;
+	declare last;
+	last="$(ls -1 | grep -E '[0-1]' | tail -n 1)";
+	last="$(echo $last | bc --ibase=2)";
+	last="$((last + 1))";
+	last="$(echo $last | bc --obase=2)"
+	if test "${#last}" -gt "${field_width}";
+	then error_exit "wrapped"; fi
+	last="$(printf "%0${field_width}d\n" "$last")";
+	if test -f "${CURRENT}/pids";
+	then error_exit "programm still running";  fi
+	mv "${CURRENT}" "${last}"
+}
 
 function error_exit {
 	echo "$@" >&2;
@@ -50,14 +61,11 @@ function user_continues {
 
 function setup {
 	CAM=FaceTime
-	if test "$1" = "stop"; then stop_recording; exit 0; fi
-	if ! test -z "$1";
-	then
-		PROJECT_NAME="$1"
-		PROJECT_PATH="${RECORDINGS_PATH}/${PROJECT_NAME}"
-		CURRENT="${PROJECT_PATH}/current"
-		PIDS_FILE="${CURRENT}/pids"
-	fi
+	if test -z "$1"; then error_exit "No Project Name provided"; fi
+	PROJECT_NAME="$1"
+	PROJECT_PATH="${RECORDINGS_PATH}/${PROJECT_NAME}"
+	CURRENT="${PROJECT_PATH}/current"
+	PIDS_FILE="${CURRENT}/pids"
 	if ! test -d "${PROJECT_PATH}";
 	then error_exit "'${PROJECT_PATH}' not found"; fi
 	mkdir -p "${CURRENT}"
@@ -75,6 +83,7 @@ function main {
 	start_recording
 	read -n 3 _unused
 	stop_recording
+	archive_current
 }
 
 main "$@";
