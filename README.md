@@ -10,10 +10,11 @@ Built for:
 ## ⚙️ Features
 
 - Records your **screen** and **mic** (macOS only)
-- Detects and records your **webcam** (FaceTime or iPhone via Continuity Camera)
-- Saves to a `current/` directory, then auto-archives to `0001/`, `0002/`, ...
+- Detects and records your **webcam**, configurable via `DEVICE_1` (e.g. iPhone via Continuity Camera)
+- Saves to a `current/` directory, which is then auto-archived to `0/`, `1/`, `2/`, ...
+- If `current/` already exists, prompts to continue or archive it to a `fail/` directory
 - Manages process PIDs for clean starts and stops
-- Fully terminal-driven — no GUI, no popups, no bullshit
+- Fully terminal-driven — no GUI
 
 ## 🍏 macOS Only (for now)
 
@@ -24,11 +25,20 @@ To list available input devices:
 ffmpeg -f avfoundation -list_devices true -i ""
 ```
 
-By default:
+The default iPhone camera name is set as:
+
+```bash
+DEVICE_1=Nokia
+```
+
+Modify it in the script to match your iPhone name. For example, if your iPhone is named
+`iPhone de John` then you can change for:
+
+```bash
+DEVICE_1=iPhone
+```
 
 * `"FaceTime"` is used as the fallback webcam
-* `Nokia` is expected to be your iPhone — you’ll likely need to edit this name in the script.
-(For example, my iPhone is named `Nokia de Thibault` so `Nokia` matches it.)
 
 🧠 **Tip:** Continuity Camera works only when your iPhone and Mac are on the same Wi-Fi, unlocked, and nearby. Once detected, the iPhone cam shows up wirelessly and can be used **without plugging it in.**
 
@@ -48,9 +58,9 @@ backend, you will be able to use it by updating its name in the script
 The script uses the following path logic (edit this in the script as needed):
 
 By default:
-- Recordings are saved under `/Volumes/T7/prefered/path/<project_name>
+- Recordings are saved under `/Volumes/T7/preferred/path/<project_name>`
   - `T7` is the name of my SSD drive
-  - `prefered/path` is a path within this drive
+  - `preferred/path` is a path within this drive
   - `<project_name>` is the name of the project provided on the command line.
   The corresponding folder **must** exist before the script runs.
   - Each project gets its own folder
@@ -62,9 +72,15 @@ By default:
 mid-session, the recording will fail silently. Be mindful of free space, especially 
 when recording long sessions.
 
-* Starts recording screen + mic + cam
-* Waits for user input to stop (press 3 random keys)
-* Moves `current/` to an archived folder
+
+1. Run the script with your project name
+2. Press any key to start recording
+3. Press any key to stop recording
+4. `current/` is automatically archived to a numbered folder
+
+## 📁 Directory Requirements
+
+- If `current/` is not empty, the script will prompt you to continue or archive its contents into `fail/`
 
 ## 💡 Why it matters
 
