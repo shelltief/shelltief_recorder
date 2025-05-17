@@ -3,6 +3,9 @@
 RECORDINGS_PATH="/Volumes/T7/code_videos/Rushes"
 SCREEN_DISPLAY=Capture
 DEVICE_1=Nokia
+THRESHOLD=5 #The script will refuse running if 
+# there isn't at least 'THRESHOLD' space left
+# (in Gib) on the target filesystem
 
 
 :<<-"COMMENT"
@@ -25,17 +28,26 @@ function archive_current_binary {
 	mv -i "${CURRENT}" "${PROJECT_PATH:?}/${last}"
 }
 
+# This function computes the following numbered
+# directory under <project_path> where the current
+# session will be stored
+function compute_next_folder {
+	declare last;
+	last="$(ls -1 "${PROJECT_PATH:?}" | grep -E '[0-9]' | sort -h | tail -n 1)";
+	last="$((last + 1))";
+	next_folder="${last}"
+}
+
 # This function takes the directory <project_path>/current
 # and archives it to a numbered directory automatically. It
 # computes the last numbered directory and increases the 
 # count automatically
 function archive_current {
-	declare last;
-	last="$(ls -1 "${PROJECT_PATH:?}" | grep -E '[0-9]' | sort -h | tail -n 1)";
-	last="$((last + 1))";
+	declare next_folder;
+	compute_next_folder;
 	if test -f "${CURRENT:?}/pids";
 	then error_exit "programm still running";  fi
-	mv -i "${CURRENT}" "${PROJECT_PATH:?}/${last}"
+	mv -i "${CURRENT:?}" "${PROJECT_PATH:?}/${next_folder}";
 }
 
 function error_exit {
@@ -90,10 +102,12 @@ function user_continues {
 # Checks for existence of project path, number of cameras 
 # and sets up variable for recording
 function setup {
+	declare space;
 	CAM=FaceTime
 	PROJECT_NAME="$1"
 	PROJECT_PATH="${RECORDINGS_PATH}/${PROJECT_NAME}"
 	CURRENT="${PROJECT_PATH}/current"
+	LOGS="${PROJECT_PATH}/recording_sizes.log"
 	FAIL="${PROJECT_PATH}/fail"; # To be used only if leftovers of 
 	# a previous recording are found
 	PIDS_FILE="${CURRENT}/pids"
@@ -110,6 +124,8 @@ function setup {
 		fi
 		mkdir -p "${CURRENT}";
 	fi
+	available_space;
+	if ! user_continues "Available space is: ${space:?} Gib. Continue?"; then exit 1; fi
 	if ! phone_cam_available;
 	then if ! user_continues "No iPhone cam. Continue?"; then exit 1; fi
 	else CAM="${DEVICE_1}"; fi
@@ -122,6 +138,16 @@ function usage {
 usage: record project_name
 USAGE
 	exit 1;
+}
+
+function available_space {
+	space="$(df -g ${CURRENT:?} | tail -n 1 | awk -F ' ' '{ print $4 }')";
+	if test "$space" -lt "${THRESHOLD:?}";
+	then cat <<-WARNING >&2
+		There are currently less than ${THRESHOLD:?} Gib left on the target device.
+		Please empty your drive, before attempting a new recording
+	WARNING
+	fi
 }
 
 function parse_options {
@@ -143,6 +169,21 @@ function recording_message {
 	MESSAGE
 }
 
+function create_log_file {
+	if ! test -f "${LOGS:?}";
+	then touch "${LOGS}"; chmod 644 "${LOGS}"; fi
+}
+
+function log_size {
+	declare next_folder;
+	create_log_file;
+	size="$(du -h ${CURRENT} | awk -F ' ' '{ print $1 }')"
+	echo "The recording session took ${size}";
+	compute_next_folder;
+	session_date="$(date "+%Y-%m-%d %H:%M:%S")";
+	echo "${session_date:?} - Session ${next_folder:?} : ${size:?}" >> "${LOGS:?}"
+}
+
 function main {
 	parse_options "$@";
 	shift $((OPTIND - 1));
@@ -153,6 +194,9 @@ function main {
 	start_recording;
 	read -n 1 _unused;
 	stop_recording;
+	sleep 2; # Ugly but need to ensure that the output from the ffmpeg bg
+	# processes have time to print on stdout
+	log_size;
 	archive_current;
 }
 
