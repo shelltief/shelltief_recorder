@@ -3,6 +3,7 @@
 RECORDINGS_PATH="/Volumes/T7/code_videos/Rushes"
 SCREEN_DISPLAY=Capture
 
+
 :<<-"COMMENT"
 This function was to archive the `current` directory
 in binary directories. It is now here as legacy code
@@ -23,6 +24,12 @@ function archive_current_binary {
 	mv -i "${CURRENT}" "${PROJECT_PATH:?}/${last}"
 }
 
+:<<-"ARCHIVE_CURRENT"
+This function takes the directory <project_path>/current
+and archives it to a numbered directory automatically. It
+computes the last numbered directory and increases the 
+count automatically
+ARCHIVE_CURRENT
 function archive_current {
 	declare last;
 	last="$(ls -1 "${PROJECT_PATH:?}" | grep -E '[0-9]' | sort -h | tail -n 1)";
@@ -37,10 +44,19 @@ function error_exit {
 	exit 1;
 }
 
+:<<-"COMMENT"
+Not called
+This is a reminder about how to list the devices 
+for the ffmpeg avfoundation backend
+COMMENT
 function list_devices {
 	ffmpeg -f avfoundation -list_devices true -i ""
 }
 
+:<<-"COMMENT"
+Launch the screen and face recording in background
+Stores the pid in a file so they can be killed later on
+COMMENT
 function start_recording {
 	if ! ffmpeg -f avfoundation -audio_device_index 1 -i "${SCREEN_DISPLAY}" "${CURRENT}/screen.mp4" &
 	then exit 1; fi
@@ -50,6 +66,11 @@ function start_recording {
 	echo $! >> "${PIDS_FILE}"
 }
 
+:<<-"COMMENT"
+Checks if there are more video displays than only the camera and the screen
+For now, it only try to grep my iPhone's name (Nokia de Thibault) and returns
+the result of the operation
+COMMENT
 function phone_cam_available {
 	if ffmpeg -f avfoundation -list_devices true -i "" 2>&1 | grep Nokia >/dev/null;
 	then return 0; else return 1; fi
@@ -61,10 +82,18 @@ function stop_recording {
 	rm "${PIDS_FILE}";
 }
 
+:<<-"COMMENT"
+To be used to check if the directory <project_path>/current is 
+empty
+COMMENT
 function is_empty {
 	if test "$(ls "$1" | wc -l)" -eq "0";
 	then return 0; else return 1; fi
 }
+
+:<<-"COMMENT"
+To be used when the user needs to choose between two options
+COMMENT
 function user_continues {
 	read -p "${1} [y/n]" -n 1;
 	case "$REPLY" in 
@@ -73,9 +102,12 @@ function user_continues {
 	esac
 }
 
+:<<-"COMMENT"
+Checks for existence of project path, number of cameras 
+and sets up variable for recording
+COMMENT
 function setup {
 	CAM=FaceTime
-	if test -z "$1"; then error_exit "No Project Name provided"; fi
 	PROJECT_NAME="$1"
 	PROJECT_PATH="${RECORDINGS_PATH}/${PROJECT_NAME}"
 	CURRENT="${PROJECT_PATH}/current"
@@ -92,12 +124,33 @@ function setup {
 	then if user_continues "Switch to FaceTime cam?"; then CAM=FaceTime; fi; fi
 }
 
+function usage {
+	cat <<USAGE >&2
+usage: record project_name
+USAGE
+	exit 1;
+}
+
+function parse_options {
+	declare optstring="h";
+	declare optvar;
+
+	while getopts "$optstring" optvar;do
+	case "$optvar" in 
+		h) usage;;
+		*) usage;;
+	esac;done
+}
+
 function main {
-	setup "$@"
-	start_recording
-	read -n 3 _unused
-	stop_recording
-	archive_current
+	parse_options "$@";
+	shift $((OPTIND - 1));
+	if test -z "$1"; then usage; fi
+	setup "$@";
+	start_recording;
+	read -n 2 _unused;
+	stop_recording;
+	archive_current;
 }
 
 main "$@";
