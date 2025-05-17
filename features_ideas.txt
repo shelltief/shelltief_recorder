@@ -1,0 +1,2 @@
+- [] Stop Recording when a data threshold is met (ex: someone forgets the script in background)
+- [] Show popup on screen when recording is interrupted due to data threshold
