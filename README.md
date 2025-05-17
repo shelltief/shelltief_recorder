@@ -12,6 +12,7 @@ Built for:
 - Records your **screen** and **mic** (macOS only)
 - Detects and records your **webcam**, configurable via `DEVICE_1` (e.g. iPhone via Continuity Camera)
 - Saves to a `current/` directory, which is then auto-archived to `0/`, `1/`, `2/`, ...
+- Saves the sessions sizes in a `recording_sizes.log` file
 - If `current/` already exists, prompts to continue or archive it to a `fail/` directory
 - Manages process PIDs for clean starts and stops
 - Fully terminal-driven — no GUI

@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 
 ---
 
-## [1.0.0] – 2024-05-14
+## [1.0.0] – 2025-05-15
 
 ### Added
 - First working version of shelltief_recorder
@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - Project-based session archiving
 - Auto fallback from iPhone to FaceTime camera
 
-## [1.1.0] – 2024-05-18
+## [1.1.0] – 2025-05-17
 
 ### Added
 - Configurable `DEVICE_1` variable for external camera name (e.g. iPhone via Continuity Camera)
@@ -28,3 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org).
 - `user_continues` now includes line breaks for cleaner output
 - Refactored `setup` logic for clarity and better failure handling
 - Replaced verbose heredocs with concise inline comments
+
+## [1.2.0] - 2025-05-17
+
+### Added
+- Configurable `THRESHOLD` variable to ensure there is enough space to record
+- Creation and/or update of a `recording_sizes.log` file to record the sessions sizes
