@@ -194,7 +194,7 @@ function main {
 	start_recording;
 	read -n 1 _unused;
 	stop_recording;
-	sleep 2; # Ugly but need to ensure that the output from the ffmpeg bg
+	sleep 3; # Ugly but need to ensure that the output from the ffmpeg bg
 	# processes have time to print on stdout
 	log_size;
 	archive_current;
