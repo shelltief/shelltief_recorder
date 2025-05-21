@@ -1,2 +1,6 @@
 - [] Stop Recording when a data threshold is met (ex: someone forgets the script in background)
 - [] Show popup on screen when recording is interrupted due to data threshold
+- [] Allow user to activate/deactivate the mic before launching recording
+- [] Allow user to change input path on command-line. Either:
+	- [] Absolute path towards the resource (has to exist already)
+	- [] Relative path 
