@@ -4,3 +4,6 @@
 - [] Allow user to change input path on command-line. Either:
 	- [] Absolute path towards the resource (has to exist already)
 	- [] Relative path 
+- [] Create interactive menu
+	- [] Allow menu settings to be saved in config file
+- [] Allow for presets (json and/or toml)
