@@ -7,3 +7,6 @@
 - [] Create interactive menu
 	- [] Allow menu settings to be saved in config file
 - [] Allow for presets (json and/or toml)
+- [ ] Investigate proper mic backend for Yeti (CoreAudio or cpal-based)
+- [ ] Allow CLI flag to disable mic or select device by name
+- [ ] Handle mono/stereo safely
