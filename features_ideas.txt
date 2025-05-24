@@ -10,3 +10,8 @@
 - [ ] Investigate proper mic backend for Yeti (CoreAudio or cpal-based)
 - [ ] Allow CLI flag to disable mic or select device by name
 - [ ] Handle mono/stereo safely
+- [ ] Feature: Concatenate multiple recorded sessions into a single video
+    - Use `ffmpeg -f concat` for same-format videos
+    - Use filter_complex + re-encoding for safe fallback
+    - Optional: add flag to select which sessions (e.g., 003 to 006)
+    - Optional: auto-merge all unmerged folders after N days
