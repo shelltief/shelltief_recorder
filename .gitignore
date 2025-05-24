@@ -1,2 +1,7 @@
 // Vim Swap Files
 *.swp
+
+
+# Added by cargo
+
+/target
