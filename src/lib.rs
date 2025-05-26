@@ -15,6 +15,14 @@ pub fn run(){
 struct AVFoundationDevice {
     id: u8,
     name: String,
+    dtype: DeviceType,
+}
+
+#[derive(Debug)]
+enum DeviceType {
+    Video,
+    Audio,
+    Unassigned,
 }
 
 
@@ -34,7 +42,7 @@ impl FromStr for AVFoundationDevice {
             .parse::<u8>().map_err(|_| String::from("id is not a digit"))?;
         let name = String::from(name);
 
-        Ok(AVFoundationDevice{ id, name })
+        Ok(AVFoundationDevice{ id, name, dtype: DeviceType::Unassigned })
     }
 }
 
@@ -69,12 +77,14 @@ pub fn get_devices() {
             video = false;
             continue;
         }
-        let device = info.parse::<AVFoundationDevice>()
+        let mut device = info.parse::<AVFoundationDevice>()
             .expect("at this stage, the line should be \
                     properly formatted");
         if video {
+            device.dtype = DeviceType::Video;
             video_devices.push(device);
         } else {
+            device.dtype = DeviceType::Audio;
             audio_devices.push(device);
         }
     }
