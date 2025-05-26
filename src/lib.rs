@@ -14,8 +14,19 @@ pub fn run() {
     if ! result {
         panic!("Directory should exist");
     }
-    let _available_space: libc::c_int;
-    let path = CString::new(test_dir.as_bytes())
+    let size = size_available(test_dir);
+    println!("Retrieved: {}", size);
+    println!("{0:.2}G", size);
+}
+
+/// Retrieves the available size (in Gb) on the target device
+///
+/// To do so, it calls `libc::statvfs` and computes (since we are
+/// on macOS), `f_frsize * f_bavail` which gives the number of 
+/// free blocks available for unpriviledged users times the size 
+/// (in bytes) of one block
+fn size_available(path: &str) -> f64 {
+    let path = CString::new(path.as_bytes())
         .expect("Failure while creating path string");
     let mut buf: MaybeUninit<libc::statvfs>;
     unsafe {
@@ -24,14 +35,6 @@ pub fn run() {
     };
     let buf = unsafe { buf.assume_init() };
     let blocks = buf.f_frsize * buf.f_bavail as u64;
-    let size: u64 = blocks;
-    let size_str = match size {
-        0..1000 => format!("{}b", size),
-        1000..1000000 => format!("{0:.2}k", size as f32 / 1e3),
-        1000000..1000000000 => format!("{0:.2}M", size as f32 / 1e6),
-        _ => format!("{0:.2}G", size as f64 / 1e9),
-    };
-    let size: f64 = size as f64/ 1e9;
-    println!("Size is: {size_str}");
-    println!("Size var: {size}");
+    let size: f64 = blocks as f64/ 1e9;
+    size
 }
