@@ -13,9 +13,15 @@ pub fn run(){
 
 #[derive(Debug)]
 struct AVFoundationDevice {
-    id: u8,
+    idx: u8,
     name: String,
     dtype: DeviceType,
+}
+
+#[derive(Debug)]
+struct Devices {
+    audio: Vec<AVFoundationDevice>,
+    video: Vec<AVFoundationDevice>,
 }
 
 #[derive(Debug)]
@@ -30,19 +36,19 @@ impl FromStr for AVFoundationDevice {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (id, name) = s
+        let (idx, name) = s
             .strip_prefix('[')
             .and_then(|s| s.split_once(' '))
             .ok_or(String::from("wrong formatting"))?;
 
 
-        let id = id
+        let idx = idx
             .strip_suffix(']')
-            .expect("id should still have a right bracket attached")
-            .parse::<u8>().map_err(|_| String::from("id is not a digit"))?;
+            .expect("idx should still have a right bracket attached")
+            .parse::<u8>().map_err(|_| String::from("idx is not a digit"))?;
         let name = String::from(name);
 
-        Ok(AVFoundationDevice{ id, name, dtype: DeviceType::Unassigned })
+        Ok(AVFoundationDevice{ idx, name, dtype: DeviceType::Unassigned })
     }
 }
 
@@ -88,6 +94,9 @@ pub fn get_devices() {
             audio_devices.push(device);
         }
     }
-    println!("{:#?}", video_devices);
-    println!("{:#?}", audio_devices);
+    let devices: Devices = Devices {
+        audio: audio_devices,
+        video: video_devices,
+    };
+    println!("{:#?}", devices);
 }
