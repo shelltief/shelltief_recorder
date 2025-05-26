@@ -19,7 +19,7 @@ struct Devices {
     video: Vec<AVFoundationDevice>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum DeviceType {
     Video,
     Audio,
@@ -40,7 +40,7 @@ impl FromStr for AVFoundationDevice {
         let idx = idx
             .strip_suffix(']')
             .expect("idx should still have a right bracket attached")
-            .parse::<u8>().map_err(|_| String::from("idx is not a digit"))?;
+            .parse::<u8>().map_err(|_| String::from("idx is not an integer"))?;
         let name = String::from(name);
 
         Ok(AVFoundationDevice{ idx, name, dtype: DeviceType::Unassigned })
@@ -94,4 +94,32 @@ pub fn get_devices() {
         video: video_devices,
     };
     println!("{:#?}", devices);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn device_parsing() {
+        let test: String = String::from("[10] Camera");
+        let device: AVFoundationDevice = test.parse().unwrap();
+        assert_eq!(device.idx, 10);
+        assert_eq!(device.name, "Camera");
+        assert_eq!(device.dtype, DeviceType::Unassigned);
+    }
+
+    #[test]
+    #[should_panic(expected="idx is not an integer")]
+    fn wrong_idx() {
+        let test: String = String::from("[a] Camera");
+        let device: AVFoundationDevice = test.parse().unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected="wrong formatting")]
+    fn no_space() {
+        let test: String = String::from("camera");
+        let device: AVFoundationDevice = test.parse().unwrap();
+    }
 }
