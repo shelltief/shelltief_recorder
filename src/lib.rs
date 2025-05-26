@@ -20,6 +20,7 @@ pub fn run() {
     let size = size_available(test_dir);
     println!("Retrieved: {}", size);
     println!("{0:.2}G", size);
+    archive_current(test_dir);
 }
 
 fn user_continues(prompt: &str) -> bool {
@@ -35,16 +36,35 @@ fn user_continues(prompt: &str) -> bool {
 
 fn archive_current(project_path: &str) {
     let current_path = project_path.to_owned() + "/" + "current";
+    let result = fs::exists(&current_path);
+    let result = result.unwrap();
+    if ! result {
+        return ;
+    }
     
-    let mut entries = fs::read_dir(current_path)
-        .expect("'current' should be readable")
-        .map(|res| res.map(|e| e.path()))
+    let mut entries = fs::read_dir(project_path)
+        .expect("'project_path' should be readable")
+        .map(|res| res.map(|e| e.file_name()))
         .collect::<Result<Vec<_>, io::Error>>()
         .unwrap();
     entries.sort();
+    let mut last_dir: u8 = 0;
     for entry in entries {
+        let entry = entry.into_string()
+            .expect("dirname should contain only unicode chars");
+        let dirname = entry.parse::<u8>();
+        if dirname.is_ok() {
+            last_dir = dirname.unwrap();
+        } else if entry.chars().next().unwrap() > '9'{
+            break;
+        }
         println!("{:#?}", entry);
     }
+    let last_dir = (last_dir + 1).to_string();
+    //println!("Last dir is: '{}'", last_dir);
+    let last_dir = project_path.to_owned() + "/" + &last_dir;
+    fs::rename(current_path, last_dir)
+        .expect("Dir should be properly renamed");
 }
 
 fn init_project_dir(dir_path: &str, project_name: &str) {
