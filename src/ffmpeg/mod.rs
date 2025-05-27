@@ -3,7 +3,7 @@ use std::{
     str::{
         self,
         FromStr
-    }
+    },
 };
 
 #[derive(Debug)]
