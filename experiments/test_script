@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+trap logsignal SIGINT;
+trap log2 SIGTERM;
+
+function logsignal {
+    echo "I've received SIGINT" >> logfile;
+}
+
+function log2 {
+    echo "I've received SIGTERM" >> logfile;
+}
+
+sleep 3;
