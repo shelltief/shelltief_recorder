@@ -6,7 +6,7 @@ use std::{
     },
 };
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct AVFoundationDevice {
     idx: u8,
     name: String,
@@ -27,6 +27,9 @@ enum DeviceType {
 }
 
 
+/// Parses a string into an AVFoundationDevice
+/// The format string has to be of the form:
+/// `[idx] device name`
 impl FromStr for AVFoundationDevice {
     type Err = String;
 
@@ -39,7 +42,7 @@ impl FromStr for AVFoundationDevice {
 
         let idx = idx
             .strip_suffix(']')
-            .expect("idx should still have a right bracket attached")
+            .ok_or(String::from("idx should still have a right bracket attached"))?
             .parse::<u8>().map_err(|_| String::from("idx is not an integer"))?;
         let name = String::from(name);
 
@@ -47,6 +50,13 @@ impl FromStr for AVFoundationDevice {
     }
 }
 
+/// Retrieves the avfoundation devices in a custom structure that
+/// is made of two vectors of devices.
+/// Each device is retrieved by parsing the output of the command:
+/// `ffmeg -f avfoundation -list_devices true -i ""`
+/// The function then iterates on all the devices and parses it into
+/// a `AVFoundationDevice` and later tags it as a `audio` or `video`
+/// device.
 pub fn get_devices() {
     let mut list_devices = Command::new("ffmpeg");
     list_devices.args(["-f", "avfoundation",
@@ -120,6 +130,13 @@ mod tests {
     #[should_panic(expected="wrong formatting")]
     fn no_space() {
         let test: String = String::from("camera");
+        let device: AVFoundationDevice = test.parse().unwrap();
+    }
+
+    #[test]
+    #[should_panic(expected="idx should still have a right bracket attached")]
+    fn no_bracket() {
+        let test: String = String::from("[10 Test String");
         let device: AVFoundationDevice = test.parse().unwrap();
     }
 }
