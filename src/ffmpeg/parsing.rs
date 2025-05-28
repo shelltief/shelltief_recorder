@@ -8,12 +8,13 @@ use std::{
     str::{
         self,
     },
+    fmt,
 };
 
-/// Parses a string into an AVFoundationDevice
-/// The format string has to be of the form:
-/// `[idx] device name`
 impl AVFoundationDevice {
+    /// Parses a string into an AVFoundationDevice
+    /// The format string has to be of the form:
+    /// `[idx] device name`
     fn parse_device(s: &str, dtype: DeviceType) -> Result<Self, String> {
         let (idx, name) = s
             .strip_prefix('[')
@@ -38,7 +39,7 @@ impl AVFoundationDevice {
 /// The function then iterates on all the devices and parses it into
 /// a `AVFoundationDevice` and later tags it as a `audio` or `video`
 /// device.
-pub fn get_devices() -> Devices {
+pub(crate) fn get_devices() -> Devices {
     let mut list_devices = Command::new("ffmpeg");
     list_devices.args(["-f", "avfoundation",
             "-list_devices", "true",
@@ -83,6 +84,45 @@ corrupted: '{}'", &line);
     Devices {
         audio: audio_devices,
         video: video_devices,
+    }
+}
+
+impl Devices {
+
+    /// Returns the index in the `Ok` variant if only one corresponding
+    /// device is found. Returns `Err` otherwise.
+    pub(super) fn get_index(&self, name: &str, dtype: DeviceType)
+    -> Result<u8, String> {
+        let mut result: Option<u8> = None;
+        let to_search: &Vec<AVFoundationDevice> = if dtype == DeviceType::Audio {
+            &self.audio
+        } else {
+            &self.video
+        };
+        for candidate in to_search {
+            if ! candidate.name.starts_with(name) {
+                continue;
+            }
+            if result.is_some() {
+                return Err(
+                    format!("Multiple {} devices found starting with name: '{}'",
+                            dtype, name)
+                );
+            }
+            result = Some(candidate.idx);
+        }
+        result.ok_or(format!("No {} device found starting with name: '{}'",
+                             dtype, name))
+    }
+}
+
+impl fmt::Display for DeviceType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match *self {
+            DeviceType::Video => "video",
+            DeviceType::Audio => "audio",
+        };
+        write!(f, "{s}")
     }
 }
 
