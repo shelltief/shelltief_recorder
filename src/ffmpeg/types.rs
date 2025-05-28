@@ -21,4 +21,5 @@ pub(super) enum DeviceType {
 pub(crate) struct Stream<'a> {
     pub(super) video: &'a str,
     pub(super) audio: Option<&'a str>,
+    pub(super) output: &'a str,
 }
