@@ -1,6 +1,8 @@
 // Vim Swap Files
 *.swp
 
+// mp4 test files
+*.mp4
 
 # Added by cargo
 
