@@ -11,15 +11,15 @@ use super::{
     AVFoundationDevice,
     DeviceType::*,
     Devices,
+    Stream,
 };
 
-pub(crate) fn record(video_device: &str,
-           audio_device: Option<&str>,
+pub(crate) fn record(stream: Stream,
            devices: Devices,
            output_name: &str)
 -> io::Result<Child>
 {
-    let video = devices.get_index(video_device, Video);
+    let video = devices.get_index(stream.video, Video);
     if video.is_err() {
         return Err(Error::new(ErrorKind::Other, video.unwrap_err()));
     }
@@ -30,11 +30,11 @@ pub(crate) fn record(video_device: &str,
     ffmpeg_command.arg("-f").arg("avfoundation");
     //Setting the framerate for displays that aren't the screen
     //TODO!: Fix (abstract) if it breaks
-    if ! video_device.starts_with("Capture screen") {
+    if ! stream.video.starts_with("Capture screen") {
         ffmpeg_command.arg("-framerate").arg(framerate.to_string());
     }
     ffmpeg_command.arg("-video_device_index").arg(video.to_string());
-    if let Some(audio) = audio_device {
+    if let Some(audio) = stream.audio {
         let audio = devices.get_index(audio, Audio);
         if audio.is_err(){
             return Err(Error::new(ErrorKind::Other, audio.unwrap_err()));
@@ -48,4 +48,13 @@ pub(crate) fn record(video_device: &str,
     println!("{:#?}", ffmpeg_command);
     //ffmpeg_command.spawn()
     Command::new("echo").arg("bonjour").spawn()
+}
+
+impl<'a> Stream<'a> {
+    pub(crate) fn new(video: &'a str, audio: Option<&'a str>) -> Stream<'a> {
+        Stream {
+            video,
+            audio,
+        }
+    }
 }
