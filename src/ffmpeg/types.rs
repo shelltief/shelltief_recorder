@@ -18,8 +18,19 @@ pub(super) enum DeviceType {
 }
 
 
+/// A struct to package all the stream information
+/// in one place in order to make the launch easier
 pub(crate) struct Stream<'a> {
     pub(super) video: &'a str,
     pub(super) audio: Option<&'a str>,
     pub(super) output: &'a str,
+}
+
+/// A Result for operations that can fail mid-way
+#[must_use = "This `IResult` can be `Incomplete`, meaning resources should be freed
+or `Err`, meaning an error should be handled"]
+pub(super) enum IResult<T,E> {
+    Ok(T),
+    Incomplete(T,E),
+    Err(E),
 }

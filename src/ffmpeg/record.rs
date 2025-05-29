@@ -57,6 +57,7 @@ pub(crate) fn launch(streams: Vec<Stream>, devices: Devices) -> io::Result<Vec<C
     for stream in streams {
         let child = record(stream, devices);
         if child.is_err() {
+            return IResult::Incomplete(children, child.unwrap_err());
         }
     }
     */
