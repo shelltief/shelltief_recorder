@@ -1,10 +1,13 @@
+use libc::{self, c_int, pid_t, SIGKILL};
 use std::{
+    ffi::CStr,
+    io::{self, Error, ErrorKind},
     iter::IntoIterator,
     ops::{
         Deref,
         DerefMut,
     },
-    process::Child,
+    process::{Child, ExitStatus},
     slice::{
         Iter,
         IterMut,
@@ -13,6 +16,11 @@ use std::{
 };
 
 pub(super) struct Children(Vec<Child>);
+
+pub(super) struct ChildResult<T,E>{
+    id: u32,
+    res: Result<T,E>
+}
 
 impl Deref for Children {
     type Target = Vec<Child>;
@@ -66,11 +74,59 @@ impl IntoIterator for Children {
     }
 }
 
-/*
-impl Children {
-    pub(super) fn kill_all(self: &Self, sig: Option<c_int>) -> i8 {
-        for child in self {
+fn terminate_child(child: &mut Child, sig: Option<c_int>)
+-> ChildResult<(), io::Error>
+{
+    let default_kill: bool = matches!(sig, None | Some(SIGKILL));
+    let res: io::Result<()>;
+    let id: u32 = child.id();
+    let res: io::Result<()> = if default_kill {
+        child.kill()
+    } else {
+        let sig = sig.unwrap();
+        let ret: c_int = unsafe {
+            libc::kill(id as pid_t, sig)
+        };
+        match ret {
+            0 => Ok(()),
+            -1 => {
+                let error = unsafe {
+                let err: *mut c_int = libc::__error();
+                let slice = CStr::from_ptr(libc::strerror(*err));
+                slice.to_str()
+                    .expect("Return value from strerror should be UTF-8")
+                };
+                Err(Error::new(ErrorKind::Other, error))
+            },
+            _ => unreachable!("`kill` should only return 0 or -1"),
         }
-    }
+    };
+    ChildResult{id, res}
 }
-*/
+
+fn wait_child(child: &mut Child, kill_result: ChildResult<(), io::Error>)
+-> ChildResult<ExitStatus, io::Error>
+{
+    let ChildResult{id, res} = kill_result;
+    debug_assert_eq!(child.id(), id, "Child id should be equal to ChildResult id");
+    if let Err(_err) = res {
+        child.kill().expect("Bro, this guy's a zombie");
+    }
+    let res: Result<ExitStatus, io::Error> = child.wait();
+    ChildResult{id, res}
+}
+
+impl Children {
+    pub(super) fn terminate(&mut self, sig: Option<c_int>)
+    -> Vec<ChildResult<ExitStatus, io::Error>>
+    {
+        let mut results: Vec<ChildResult<ExitStatus, io::Error>> = Vec::new();
+        for child in self {
+            let kill_result = terminate_child(child, sig);
+            let res = wait_child(child, kill_result);
+            results.push(res);
+        }
+        results
+    }
+
+}
