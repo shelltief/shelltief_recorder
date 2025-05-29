@@ -29,7 +29,7 @@ pub(crate) struct Stream<'a> {
 /// A Result for operations that can fail mid-way
 #[must_use = "This `IResult` can be `Incomplete`, meaning resources should be freed
 or `Err`, meaning an error should be handled"]
-pub(super) enum IResult<T,E> {
+pub(crate) enum IResult<T,E> {
     Ok(T),
     Incomplete(T,E),
     Err(E),

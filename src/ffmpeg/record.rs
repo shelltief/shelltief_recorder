@@ -1,8 +1,9 @@
-use super::{AVFoundationDevice, DeviceType::*, Devices, Stream};
+use super::{DeviceType::*, Devices, Stream, IResult, Children};
 use std::io::{self, Error, ErrorKind};
 use std::process::{Child, Command};
 
-pub(crate) fn record(stream: Stream, devices: Devices) -> io::Result<Child> {
+pub(crate) fn record(stream: Stream, devices: &Devices) -> io::Result<Child>
+{
     let video = devices.get_index(stream.video, Video);
     if video.is_err() {
         return Err(Error::new(ErrorKind::Other, video.unwrap_err()));
@@ -32,37 +33,35 @@ pub(crate) fn record(stream: Stream, devices: Devices) -> io::Result<Child> {
             .arg(audio.to_string());
     }
     ffmpeg_command.arg("-i \"\"").arg(stream.output);
-    println!("{:#?}", ffmpeg_command);
-    //ffmpeg_command.spawn()
-    Command::new("echo").arg("bonjour").spawn()
+    ffmpeg_command.spawn()
 }
 
-/*
-pub(crate) fn launch(streams: Vec<Stream>, devices: Devices) -> io::Result<Vec<Child>> {
-    if stream.is_empty() {
-        return Err(Error::new(ErrorKind::Other, "No stream to launch"));
+pub(crate) fn launch(streams: Vec<Stream>, devices: Devices)
+-> IResult<Children, io::Error>
+{
+    if streams.is_empty() {
+        return IResult::Err(Error::new(ErrorKind::Other, "No stream to launch"));
     }
     for i in 0..(streams.len() - 1) {
         for j in (i+1)..streams.len() {
-            if (streams[i].output == streams[j].output) {
-                return Err(Error:new(ErrorKind::Other,
+            if streams[i].output == streams[j].output {
+                return IResult::Err(Error::new(ErrorKind::Other,
                 format!("Two output files with name '{}' found", streams[i].output)));
             }
         }
     }
     //TODO: Finish implementation of launch function
     //Implement enum for partial success and helper functions
-    /*
-    let children: Vec<Child> = Vec::new();
+    let mut children: Children = Children::new();
     for stream in streams {
-        let child = record(stream, devices);
+        let child = record(stream, &devices);
         if child.is_err() {
             return IResult::Incomplete(children, child.unwrap_err());
         }
+        children.push(child.unwrap())
     }
-    */
+    IResult::Ok(children)
 }
-*/
 
 impl<'a> Stream<'a> {
     pub(crate) fn new(video: &'a str, audio: Option<&'a str>, output: &'a str)

@@ -15,9 +15,9 @@ use std::{
     vec::IntoIter,
 };
 
-pub(super) struct Children(Vec<Child>);
+pub(crate) struct Children(Vec<Child>);
 
-pub(super) struct ChildResult<T,E>{
+pub(crate) struct ChildResult<T,E>{
     id: u32,
     res: Result<T,E>
 }
@@ -78,7 +78,6 @@ fn terminate_child(child: &mut Child, sig: Option<c_int>)
 -> ChildResult<(), io::Error>
 {
     let default_kill: bool = matches!(sig, None | Some(SIGKILL));
-    let res: io::Result<()>;
     let id: u32 = child.id();
     let res: io::Result<()> = if default_kill {
         child.kill()
@@ -117,7 +116,8 @@ fn wait_child(child: &mut Child, kill_result: ChildResult<(), io::Error>)
 }
 
 impl Children {
-    pub(super) fn terminate(&mut self, sig: Option<c_int>)
+    /// Terminates and waits all children. Last stop before cleanup
+    pub(crate) fn cleanup(&mut self, sig: Option<c_int>)
     -> Vec<ChildResult<ExitStatus, io::Error>>
     {
         let mut results: Vec<ChildResult<ExitStatus, io::Error>> = Vec::new();
@@ -127,6 +127,11 @@ impl Children {
             results.push(res);
         }
         results
+    }
+
+    pub(super) fn new() -> Self {
+        let v: Vec<Child> = Vec::new();
+        Children(v)
     }
 
 }
