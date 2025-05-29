@@ -17,6 +17,8 @@ use std::{
 
 pub(crate) struct Children(Vec<Child>);
 
+#[must_use = "The `ChildResult` contains a `Result`, which should be checked for
+possible failures"]
 pub(crate) struct ChildResult<T,E>{
     id: u32,
     res: Result<T,E>

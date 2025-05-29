@@ -32,7 +32,8 @@ pub(crate) fn record(stream: Stream, devices: &Devices) -> io::Result<Child>
             .arg("-audio_device_index")
             .arg(audio.to_string());
     }
-    ffmpeg_command.arg("-i \"\"").arg(stream.output);
+    ffmpeg_command.arg("-i").arg("\"\"")
+        .arg(stream.output);
     ffmpeg_command.spawn()
 }
 
