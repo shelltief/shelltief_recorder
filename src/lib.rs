@@ -1,5 +1,12 @@
-//mod ffmpeg;
-//pub use ffmpeg::get_devices;
+mod ffmpeg;
+use ffmpeg::{
+    get_devices,
+    Devices,
+    Stream,
+    IResult,
+    Children,
+};
+use libc;
 //mod dir;
 //use dir::{
 //    init_project_dir,
@@ -10,6 +17,28 @@
 use std::io;
 
 
+pub fn run(){
+    let devices: Devices = get_devices();
+    let stream = Stream::new("FaceTime", Some("Yeti"), "test.mp4");
+    let streams: Vec<Stream> = vec![stream];
+    let res = ffmpeg::launch(streams, devices);
+    let mut children: Children = match res {
+        IResult::Err(err) => {
+            println!("Go error: {err}");
+            panic!("Couldn't launch recording");
+        },
+        IResult::Incomplete(mut children, err) => {
+            children.cleanup(None);
+            println!("Recording was half launched, error is: {err}");
+            panic!("Couldn't proceed with full recording");
+        }
+        IResult::Ok(children) => {
+            children
+        }
+    };
+    user_continues("test");
+    children.cleanup(Some(libc::SIGINT));
+}
 
 //pub fn run() {
 //    let mut test_dir = "/Volumes/T7/code_videos/Rushes";
@@ -28,7 +57,7 @@ use std::io;
 //    }
 //}
 
-/// Prompts for a user choice. For now, user can press 
+/// Prompts for a user choice. For now, user can press
 /// `y` or `Y` to accept and any other key to refuse
 fn user_continues(prompt: &str) -> bool {
     let mut input = String::new();
