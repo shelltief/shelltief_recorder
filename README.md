@@ -94,4 +94,15 @@ Because every dev deserves to document their journey — without breaking flow.
 This is an early, raw version. But it works.
 Use it, fork it, break it, improve it.
 
+
+## 🚫 AI Training / Commercial Use
+
+This project is released under a [GPL-3.0 license](LICENSE.md) with the following restrictions:
+
+🧠 **AI Training Prohibited**
+You may NOT use this code to train, fine-tune, or power any machine learning system, including Copilot, ChatGPT, or similar tools.
+
+💰 **Commercial Use Requires a License**
+If you intend to use this in a closed-source or for-profit project, you must contact me for a commercial license.
+
 > Built by [Shelltief](https://shelltief.sh) to document real work, in a smooth way.
