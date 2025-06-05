@@ -1,6 +1,6 @@
 use super::{DeviceType::*, Devices, Stream, IResult, Children};
 use std::io::{self, Error, ErrorKind};
-use std::process::{Child, Command};
+use std::process::{Child, Command, Stdio};
 
 pub(crate) fn record(stream: Stream, devices: &Devices) -> io::Result<Child>
 {
@@ -34,6 +34,8 @@ pub(crate) fn record(stream: Stream, devices: &Devices) -> io::Result<Child>
     }
     ffmpeg_command.arg("-i").arg("\"\"")
         .arg(stream.output);
+    ffmpeg_command.stderr(Stdio::null())
+        .stdin(Stdio::null());
     ffmpeg_command.spawn()
 }
 

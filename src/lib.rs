@@ -1,4 +1,5 @@
 mod ffmpeg;
+mod control;
 use ffmpeg::{
     get_devices,
     Devices,
@@ -36,7 +37,7 @@ pub fn run(){
             children
         }
     };
-    user_continues("test");
+    //user_continues("test");
     children.cleanup(Some(libc::SIGINT));
 }
 
@@ -57,16 +58,5 @@ pub fn run(){
 //    }
 //}
 
-/// Prompts for a user choice. For now, user can press
-/// `y` or `Y` to accept and any other key to refuse
-fn user_continues(prompt: &str) -> bool {
-    let mut input = String::new();
 
-    println!("{} [y/n] -- press 'Enter' to validate", prompt);
-
-    io::stdin().read_line(&mut input)
-        .expect("Line should be readable");
-
-    matches!(input.trim(), "y" | "Y")
-}
 

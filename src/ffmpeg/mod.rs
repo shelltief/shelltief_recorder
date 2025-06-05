@@ -2,6 +2,7 @@ mod types;
 mod parsing;
 mod children;
 mod record;
+mod monitor;
 pub(super) use record::{
     record,
     launch,
@@ -14,3 +15,7 @@ pub(super) use types::{
 };
 pub(super) use children::{Children, ChildResult};
 pub(super) use parsing::get_devices;
+pub(super) use monitor::{
+    MonitorAction,
+    monitor,
+};
