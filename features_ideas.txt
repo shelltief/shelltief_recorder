@@ -16,3 +16,5 @@
     - Optional: add flag to select which sessions (e.g., 003 to 006)
     - Optional: auto-merge all unmerged folders after N days
 - [] Feature: Print video duration when the script exits
+- [] Improvement: Archive current into month-day folder to track the sessions
+in a daily fashion
