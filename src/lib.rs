@@ -15,8 +15,6 @@ use libc;
 //    archive_current,
 //};
 
-use std::io;
-
 
 pub fn run(){
     let devices: Devices = get_devices();

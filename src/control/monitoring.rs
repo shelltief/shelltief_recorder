@@ -14,9 +14,9 @@ use super::{
 };
 
 pub(super) fn control_panel(children: Children) {
-    let mut stopflag: Arc<Mutex<MonitorAction>>
+    let stopflag: Arc<Mutex<MonitorAction>>
         = Arc::new(Mutex::new(MonitorAction::Continue));
-    let mut monitor_stop = Arc::clone(&stopflag);
+    let monitor_stop = Arc::clone(&stopflag);
     let children: Arc<Mutex<Children>>
         = Arc::new(Mutex::new(children));
     let monitor_children = Arc::clone(&children);
@@ -42,10 +42,10 @@ pub(super) fn control_panel(children: Children) {
         }
     }
     monitor_handle.join();
-    let mut children = *Arc::get_mut(&mut children)
+    let children = Arc::into_inner(children)
         .expect("Since the monitor has been joined, this Arc should be the \
 only one alive");
-    let mut children = *children.replace(Children::new())
+    let mut children = children.into_inner()
         .expect("Value should be retrievable");
     children.cleanup(Some(SIGINT));
 }

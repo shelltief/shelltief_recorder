@@ -4,7 +4,6 @@ mod children;
 mod record;
 mod monitor;
 pub(super) use record::{
-    record,
     launch,
 };
 use types::*;
@@ -13,7 +12,7 @@ pub(super) use types::{
     Stream,
     IResult,
 };
-pub(super) use children::{Children, ChildResult};
+pub(super) use children::{Children};
 pub(super) use parsing::get_devices;
 pub(super) use monitor::{
     MonitorAction,
