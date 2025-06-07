@@ -10,6 +10,8 @@ use std::{
             Mutex,
             mpsc::Sender,
         },
+        thread,
+        time,
 };
 use super::Children;
 
@@ -36,9 +38,10 @@ pub(crate) fn monitor(
                 return;
             }
         }
-        tx.send(Running)
-            .expect("If main thread has been stopped, monitor should have been \
-killed beforehand");
+        if tx.send(Running).is_err() {
+            break;
+        }
+        thread::sleep(time::Duration::from_millis(500));
     }
 }
 

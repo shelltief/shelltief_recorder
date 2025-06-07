@@ -13,8 +13,7 @@ pub(crate) enum StopStatus {
 
 pub(super) fn user_control(tx: Sender<StopStatus>){
     user_continues("Press any key to stop recording");
-    tx.send(StopStatus::UserStop)
-        .expect("If the main thread exited, this thread should have stopped earlier");
+    let _ = tx.send(StopStatus::UserStop);
 }
 
 /// Prompts for a user choice. For now, user can press
