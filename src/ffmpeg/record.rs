@@ -35,7 +35,8 @@ pub(crate) fn record(stream: Stream, devices: &Devices) -> io::Result<Child>
     ffmpeg_command.arg("-i").arg("\"\"")
         .arg(stream.output);
     ffmpeg_command.stderr(Stdio::null())
-        .stdin(Stdio::null());
+        .stdin(Stdio::null())
+        .stdout(Stdio::null());
     ffmpeg_command.spawn()
 }
 
@@ -53,8 +54,6 @@ pub(crate) fn launch(streams: Vec<Stream>, devices: Devices)
             }
         }
     }
-    //TODO: Finish implementation of launch function
-    //Implement enum for partial success and helper functions
     let mut children: Children = Children::new();
     for stream in streams {
         let child = record(stream, &devices);

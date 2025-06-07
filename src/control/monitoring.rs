@@ -13,7 +13,7 @@ use super::{
     user_control,
 };
 
-pub(super) fn control_panel(children: Children) {
+pub(crate) fn control_panel(children: Children) {
     let stopflag: Arc<Mutex<MonitorAction>>
         = Arc::new(Mutex::new(MonitorAction::Continue));
     let monitor_stop = Arc::clone(&stopflag);
@@ -28,7 +28,7 @@ pub(super) fn control_panel(children: Children) {
     thread::spawn(move || {
         user_control(tuser);
     });
-    for message in rx.recv() {
+    for message in rx {
         match message {
             StopStatus::Exited(id) => {
                 eprintln!("Child: {id} exited early");
@@ -41,7 +41,10 @@ pub(super) fn control_panel(children: Children) {
             StopStatus::Running => {},
         }
     }
-    monitor_handle.join();
+    match monitor_handle.join() {
+        Ok(_) => {},
+        Err(e) => eprintln!("Error joining monitoring thread: {:#?}", e),
+    };
     let children = Arc::into_inner(children)
         .expect("Since the monitor has been joined, this Arc should be the \
 only one alive");

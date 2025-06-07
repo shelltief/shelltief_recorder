@@ -1,5 +1,8 @@
-mod ffmpeg;
 mod control;
+use control::{
+    control_panel,
+};
+mod ffmpeg;
 use ffmpeg::{
     get_devices,
     Devices,
@@ -7,7 +10,6 @@ use ffmpeg::{
     IResult,
     Children,
 };
-use libc;
 //mod dir;
 //use dir::{
 //    init_project_dir,
@@ -18,10 +20,10 @@ use libc;
 
 pub fn run(){
     let devices: Devices = get_devices();
-    let stream = Stream::new("FaceTime", Some("Yeti"), "test.mp4");
+    let stream = Stream::new("FaceTime", Some("MacBook"), "test.mp4");
     let streams: Vec<Stream> = vec![stream];
     let res = ffmpeg::launch(streams, devices);
-    let mut children: Children = match res {
+    let children: Children = match res {
         IResult::Err(err) => {
             println!("Go error: {err}");
             panic!("Couldn't launch recording");
@@ -35,8 +37,7 @@ pub fn run(){
             children
         }
     };
-    //user_continues("test");
-    children.cleanup(Some(libc::SIGINT));
+    control_panel(children);
 }
 
 //pub fn run() {

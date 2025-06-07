@@ -31,12 +31,13 @@ pub(crate) fn monitor(
         let children = children.lock().unwrap();
         for child in &*children {
             if ! is_running(&child) {
-                tx.send(Exited(child.id()));
+                tx.send(Exited(child.id()))
+                    .expect("Main thread receiving end is closed");
                 return;
             }
         }
         tx.send(Running)
-            .expect("If main thread has been stopped, monitor should have been\
+            .expect("If main thread has been stopped, monitor should have been \
 killed beforehand");
     }
 }
