@@ -3,7 +3,6 @@ use std::{
         process::{
             Child,
             Command,
-            Stdio,
         },
         sync::{
             Arc,
@@ -30,9 +29,10 @@ pub(crate) fn monitor(
         if *stopflag.lock().unwrap() == MonitorAction::Stop {
             return;
         }
-        let children = children.lock().unwrap();
-        for child in &*children {
-            if ! is_running(&child) {
+        let mut children = children.lock().unwrap();
+        for child in &mut *children {
+            println!("{:#?}", child);
+            if ! child.is_running(Some(&tx)) {
                 tx.send(Exited(child.id()))
                     .expect("Main thread receiving end is closed");
                 return;
@@ -49,13 +49,13 @@ fn is_running(child: &Child) -> bool {
     let mut check = Command::new("ps");
     check.arg("-p")
         .arg(format!("{}", child.id()));
-    check.stdout(Stdio::null())
-        .stderr(Stdio::null());
+    /*check.stdout(Stdio::null())
+        .stderr(Stdio::null());*/
     match check.status() {
-        Ok(st) => match st.code() {
+        Ok(st) => {match st.code() {
             Some(0) => true,
             _ => false,
-        },
+        }},
         _ => false,
     }
 }

@@ -8,6 +8,7 @@ pub(crate) enum StopStatus {
     Exited(u32),
     UserStop,
     Running,
+    Panic(String),
 }
 
 

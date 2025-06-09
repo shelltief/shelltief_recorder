@@ -39,6 +39,10 @@ pub(crate) fn control_panel(children: Children) {
                 break;
             },
             StopStatus::Running => {},
+            StopStatus::Panic(_) => {
+                eprintln!("Monitor thread panicked");
+                break;
+            },
         }
     }
     match monitor_handle.join() {

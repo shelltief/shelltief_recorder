@@ -1,6 +1,6 @@
-use super::{DeviceType::*, Devices, Stream, IResult, Children};
+use super::{DeviceType::*, Devices, Stream, IResult, Children, Child};
 use std::io::{self, Error, ErrorKind};
-use std::process::{Child, Command, Stdio};
+use std::process::{Command, Stdio};
 
 pub(crate) fn record(stream: Stream, devices: &Devices) -> io::Result<Child>
 {
@@ -37,7 +37,8 @@ pub(crate) fn record(stream: Stream, devices: &Devices) -> io::Result<Child>
     ffmpeg_command.stderr(Stdio::null())
         .stdin(Stdio::null())
         .stdout(Stdio::null());
-    ffmpeg_command.spawn()
+    let child = ffmpeg_command.spawn()?;
+    Ok(Child::new(child))
 }
 
 pub(crate) fn launch(streams: Vec<Stream>, devices: Devices)
