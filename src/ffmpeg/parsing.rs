@@ -1,3 +1,7 @@
+//! # Parsing
+//!
+//! Module to parse ffmpeg output and retrieve usable informations about
+//! the devices
 use super::{
     AVFoundationDevice,
     DeviceType,
@@ -15,6 +19,15 @@ impl AVFoundationDevice {
     /// Parses a string into an AVFoundationDevice
     /// The format string has to be of the form:
     /// `[idx] device name`
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// let test_string: &str = "[1] Test Device";
+    /// let device = parse_device(test_string, DeviceType::Video)
+    ///     .expect("test string is properly formatted");
+    /// assert_eq!(device.name, "Test Device");
+    /// ```
     fn parse_device(s: &str, dtype: DeviceType) -> Result<Self, String> {
         let (idx, name) = s
             .strip_prefix('[')

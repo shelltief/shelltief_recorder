@@ -1,3 +1,6 @@
+//! Implementation of the newtype pattern to wrap
+//! a vector of `ffmpeg::Child` and add it some
+//! functionnalities
 use super::{Child, ChildResult};
 use libc::c_int;
 use std::{
@@ -16,8 +19,6 @@ use std::{
 };
 
 pub(crate) struct Children(Vec<Child>);
-
-
 
 impl Deref for Children {
     type Target = Vec<Child>;
@@ -74,6 +75,31 @@ impl IntoIterator for Children {
 
 impl Children {
     /// Terminates and waits all children. Last stop before cleanup
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use std::process::Command;
+    /// use libc::SIGINT;
+    ///
+    /// let c1 = Command::new("sleep");
+    /// c1.args("2");
+    /// let c2 = Command::new("sleep");
+    /// c2.args("3");
+    /// let children = Children::new();
+    /// children.push(c1.spawn().unwrap());
+    /// children.push(c2.spawn().unwrap());
+    /// children.cleanup(Some(SIGINT));
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// If there is an error waiting for the process, an error is reported
+    ///
+    /// # Panics
+    ///
+    /// If there is an error in the second firing of the `kill` signal (in
+    /// `child.terminate`)
     pub(crate) fn cleanup(&mut self, sig: Option<c_int>)
     -> Vec<ChildResult<ExitStatus, io::Error>>
     {
@@ -92,6 +118,7 @@ impl Children {
         results
     }
 
+    /// Wraps a `Vec<std::process::Child>` into a `Children`
     pub(super) fn new() -> Self {
         let v: Vec<Child> = Vec::new();
         Children(v)
