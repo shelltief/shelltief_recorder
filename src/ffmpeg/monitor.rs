@@ -1,9 +1,5 @@
 use crate::control::StopStatus::{self,*};
 use std::{
-        process::{
-            Child,
-            Command,
-        },
         sync::{
             Arc,
             Mutex,
@@ -42,20 +38,5 @@ pub(crate) fn monitor(
             break;
         }
         thread::sleep(time::Duration::from_millis(500));
-    }
-}
-
-fn is_running(child: &Child) -> bool {
-    let mut check = Command::new("ps");
-    check.arg("-p")
-        .arg(format!("{}", child.id()));
-    /*check.stdout(Stdio::null())
-        .stderr(Stdio::null());*/
-    match check.status() {
-        Ok(st) => {match st.code() {
-            Some(0) => true,
-            _ => false,
-        }},
-        _ => false,
     }
 }

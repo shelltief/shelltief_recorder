@@ -83,8 +83,8 @@ impl Children {
                 if let Some(status) = child.status() {
                     ChildResult::new(child.id(), Ok(status))
                 } else {
-                    let kill_result = child.terminate(sig);
-                    child.wait(kill_result)
+                    child.terminate(sig);
+                    child.wait()
                 }
             };
             results.push(res);
