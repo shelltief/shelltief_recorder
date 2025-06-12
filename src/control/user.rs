@@ -3,6 +3,8 @@ use std::{
     io,
 };
 
+/// Enum of statuses that are to be used between the
+/// controlling threads and the main thread
 #[derive(PartialEq)]
 pub(crate) enum StopStatus {
     Exited(u32),
@@ -12,6 +14,7 @@ pub(crate) enum StopStatus {
 }
 
 
+/// Receives an input from a user and transfers it through a ['channel']
 pub(super) fn user_control(tx: Sender<StopStatus>){
     user_continues("Press any key to stop recording");
     let _ = tx.send(StopStatus::UserStop);

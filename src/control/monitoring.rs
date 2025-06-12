@@ -13,6 +13,41 @@ use super::{
     user_control,
 };
 
+/// Main function to control the interactive
+/// run of the script.
+/// It takes in an array of children, initializes
+/// the different mutexes to monitor and launch
+/// the threads
+///
+/// # Examples
+///
+/// ```ignore
+/// use crate::ffmpeg::{
+///     Children,
+///     Devices,
+///     IResult,
+///     Stream,
+///     get_devices,
+/// };
+///
+/// let streams = Vec::from(Stream::new("Facetime", None, "output.mp4"));
+/// let devices = get_devices();
+/// let launch_result = launch(streams, devices);
+/// if launch_result.is_err() {
+///     match launch_result {
+///         IResult::Incomplete(t, e) => {
+///             let _ = t.cleanup(None);
+///             println!("Incomplete launch with error: {e}");
+///         },
+///         IResult::Error(e) => {
+///             println!("Error: {e}");
+///         }
+///     };
+/// } else {
+///     let children = launch_result.unwrap();
+///     control_panel(children);
+/// }
+/// ```
 pub(crate) fn control_panel(children: Children) {
     let stopflag: Arc<Mutex<MonitorAction>>
         = Arc::new(Mutex::new(MonitorAction::Continue));
