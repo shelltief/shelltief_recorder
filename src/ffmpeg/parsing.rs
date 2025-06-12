@@ -52,6 +52,11 @@ impl AVFoundationDevice {
 /// The function then iterates on all the devices and parses it into
 /// a `AVFoundationDevice` and later tags it as a `audio` or `video`
 /// device.
+///
+/// # Panics
+///
+/// - If ffmpeg output isn't valid `UTF-8`
+/// - If ffmpeg output isn't properly formatted
 pub(crate) fn get_devices() -> Devices {
     let mut list_devices = Command::new("ffmpeg");
     list_devices.args(["-f", "avfoundation",

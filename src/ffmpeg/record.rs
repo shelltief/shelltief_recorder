@@ -73,12 +73,10 @@ impl<'a> Stream<'a> {
     /// ```
     pub(crate) fn record(&self, devices: &Devices) -> io::Result<Child>
     {
-        let video = devices.get_index(self.video, Video);
-        if video.is_err() {
-            return Err(Error::new(ErrorKind::Other, video.unwrap_err()));
-        }
-        println!("{:#?}", video);
-        let video = video.unwrap();
+        let video = devices.get_index(self.video, Video)
+            .map_err(|e| Error::new(ErrorKind::Other, e))?;
+        #[cfg(debug_assertions)]
+        println!("video device index: {:#?}", video);
         let framerate: u8 = 30;
         let mut ffmpeg_command = Command::new("ffmpeg");
         ffmpeg_command.arg("-f").arg("avfoundation");
@@ -91,12 +89,10 @@ impl<'a> Stream<'a> {
             .arg("-video_device_index")
             .arg(video.to_string());
         if let Some(audio) = self.audio {
-            let audio = devices.get_index(audio, Audio);
-            if audio.is_err() {
-                return Err(Error::new(ErrorKind::Other, audio.unwrap_err()));
-            }
+            let audio = devices.get_index(audio, Audio)
+                .map_err(|e| Error::new(ErrorKind::Other, e))?;
+            #[cfg(debug_assertions)]
             println!("{:#?}", audio);
-            let audio = audio.unwrap();
             ffmpeg_command
                 .arg("-audio_device_index")
                 .arg(audio.to_string());
