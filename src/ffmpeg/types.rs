@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug, PartialEq)]
 pub(super) struct AVFoundationDevice {
     pub(super) idx: u8,
@@ -33,4 +35,32 @@ pub(crate) enum IResult<T,E> {
     Ok(T),
     Incomplete(T,E),
     Err(E),
+}
+
+impl<T,E> IResult<T,E> {
+    pub(crate) fn is_err(&self) -> bool {
+        match self {
+            Self::Ok(_) => false,
+            Self::Incomplete(_, _) => true,
+            Self::Err(_) => true,
+        }
+    }
+
+    /// Returns the contained [`Self::Ok`] value, consuming the `self` value
+    /// Usable like a [`Result`] `unwrap` method.
+    /// # Panics
+    ///
+    /// If the contained value is `Self::Incomplete` or `Self::Error`
+    pub(crate) fn unwrap(self) -> T
+    where
+        E: fmt::Debug,
+    {
+        match self {
+            Self::Ok(t) => t,
+            Self::Incomplete(_,e) =>
+                panic!("Call to unwrap on IResult::Incomplete: {e:?}"),
+            Self::Err(e) =>
+                panic!("Call to unwrap on IResult::Error: {e:?}"),
+        }
+    }
 }
