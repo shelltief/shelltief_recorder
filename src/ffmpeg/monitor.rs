@@ -64,7 +64,6 @@ pub(crate) fn monitor(
         }
         let mut children = children.lock().unwrap();
         for child in &mut *children {
-            println!("{:#?}", child);
             if ! child.is_running(Some(&tx)) {
                 tx.send(Exited(child.id()))
                     .expect("Main thread receiving end is closed");

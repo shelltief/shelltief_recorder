@@ -15,9 +15,10 @@ use ffmpeg::{
 
 pub fn run() -> Result<(), String>{
     let project_path = setup()?;
+    println!("Project_path is : '{project_path}'");
     let devices = get_devices();
-    let face = Stream::new("Facetime", Some("Macbook"), "face.mp4", Some(&project_path));
-    let screen = Stream::new("Capture Screen 0", None, "screen.mp4", Some(&project_path));
+    let face = Stream::new("FaceTime", Some("MacBook"), "face.mp4", Some(&project_path));
+    let screen = Stream::new("Capture screen 0", None, "screen.mp4", Some(&project_path));
     let streams: Vec<Stream> = vec![face, screen];
     let res = ffmpeg::launch(streams, devices);
     let children = res.unwrap_with(|mut c| {c.cleanup(None);});
