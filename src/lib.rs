@@ -13,30 +13,6 @@ use ffmpeg::{
 };
 
 
-/*
-pub fn run(){
-    let devices: Devices = get_devices();
-    let stream = Stream::new("FaceTime", Some("MacBook"), "test.mp4");
-    let streams: Vec<Stream> = vec![stream];
-    let res = ffmpeg::launch(streams, devices);
-    let children: Children = match res {
-        IResult::Err(err) => {
-            println!("Go error: {err}");
-            panic!("Couldn't launch recording");
-        },
-        IResult::Incomplete(mut children, err) => {
-            children.cleanup(None);
-            println!("Recording was half launched, error is: {err}");
-            panic!("Couldn't proceed with full recording");
-        }
-        IResult::Ok(children) => {
-            children
-        }
-    };
-    control_panel(children);
-}
-*/
-
 pub fn run() -> Result<(), String>{
     let project_path = setup()?;
     let devices = get_devices();
@@ -48,19 +24,3 @@ pub fn run() -> Result<(), String>{
     control_panel(children);
     archive_current(&project_path)
 }
-
-// pub fn run() {
-//     let mut test_dir = "/Volumes/T7/code_videos/Rushes";
-//     if let Some(path) = test_dir.strip_suffix("/") {
-//         test_dir = path;
-//     }
-//     let project_dir = init_project_dir(test_dir, "test");
-//     let size = size_available(test_dir);
-//     println!("{0:.2}G", size);
-//     archive_current(test_dir);
-//     if ! user_continues("Would you like to continue?") {
-//         println!("User didn't which to continue");
-//     } else {
-//         println!("User is in!");
-//     }
-// }
