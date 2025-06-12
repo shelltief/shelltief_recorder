@@ -22,7 +22,7 @@ pub(super) fn user_control(tx: Sender<StopStatus>){
 
 /// Prompts for a user choice. For now, user can press
 /// `y` or `Y` to accept and any other key to refuse
-fn user_continues(prompt: &str) -> bool {
+pub(super) fn user_continues(prompt: &str) -> bool {
     let mut input = String::new();
 
     println!("{} [y/n] -- press 'Enter' to validate", prompt);

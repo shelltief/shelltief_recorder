@@ -1,6 +1,13 @@
-mod user;
 mod monitoring;
-use user::user_control;
+mod setup;
+mod user;
+use user::{
+    user_control,
+    user_continues,
+};
 
-pub(crate) use user::StopStatus;
 pub(crate) use monitoring::control_panel;
+pub(super) use setup::setup;
+pub(crate) use user::{
+    StopStatus,
+};
