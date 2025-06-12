@@ -6,7 +6,6 @@ use crate::{
         dir::{
             size_available,
             init_project_dir,
-            archive_current,
         },
 };
 use super::user_continues;

@@ -28,7 +28,7 @@ use std::{
 ///
 /// # Errors
 ///
-/// If the `current` directory doesn't exist within `project_path`
+/// If `current` dir doesn't exist
 ///
 /// # Panics
 ///
@@ -36,11 +36,16 @@ use std::{
 /// - If `dirname` contains non-unicode chars
 /// - If `current` dir isn't properly renamed
 pub(crate) fn archive_current(project_path: &str) -> Result<(), String>{
+    let project_path = if let Some(path) = project_path.strip_suffix("/") {
+        path
+    } else {
+        project_path
+    };
     let current_path = project_path.to_owned() + "/" + "current";
     let result = fs::exists(&current_path);
     let result = result.unwrap();
     if ! result {
-        return Err(format!("'{current_path}' not found"));
+        return Err(format!("'{current_path}' directory not found"));
     }
 
     let mut entries = fs::read_dir(project_path)
@@ -88,7 +93,17 @@ pub(crate) fn archive_current(project_path: &str) -> Result<(), String>{
 /// - If `project_path` can't be created by the `DirBuilder`
 /// - If `project_path` isn't searchable
 pub(crate) fn init_project_dir(dir_path: &str, project_name: &str)
--> Result<(), String> {
+-> Result<String, String> {
+    let dir_path = if let Some(path) = dir_path.strip_suffix("/") {
+        path
+    } else {
+        dir_path
+    };
+    let project_name = if let Some(name) = project_name.strip_suffix("/") {
+        name
+    } else {
+        project_name
+    };
     let result = fs::exists(dir_path);
     let result = result.unwrap();
     if ! result {
@@ -98,9 +113,13 @@ pub(crate) fn init_project_dir(dir_path: &str, project_name: &str)
     let current_path = project_path.clone() + "/" + "current";
     DirBuilder::new()
         .recursive(true)
-        .create(project_path)
+        .create(&project_path)
         .expect("Path should be created");
-    let _ = fs::exists(&current_path)
+    let exists = fs::exists(&current_path)
         .expect("project directory should be searchable");
-    Ok(())
+    if exists {
+        let _ = fs::remove_dir_all(&current_path)
+            .map_err(|e| {e.to_string()})?;
+    }
+    Ok(project_path)
 }

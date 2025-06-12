@@ -1,5 +1,5 @@
 use shellrecord;
 
 fn main() {
-    shellrecord::run();
+    let _ = shellrecord::run();
 }

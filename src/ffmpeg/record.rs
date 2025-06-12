@@ -1,9 +1,8 @@
 //! # Record
 //!
 //! Module that controls the recording
-use super::{DeviceType::*, Devices, Stream, IResult, Children, Child};
+use super::{Devices, Stream, IResult, Children};
 use std::io::{self, Error, ErrorKind};
-use std::process::{Command, Stdio};
 
 
 
