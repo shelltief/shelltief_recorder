@@ -13,6 +13,14 @@ use super::{
     user_control,
 };
 
+pub(crate) fn launch_control_thread<F>(f: F, tx: mpsc::Sender<StopStatus>)
+-> thread::JoinHandle<()>
+where
+    F: FnOnce(mpsc::Sender<StopStatus>) + Send + 'static,
+{
+    thread::spawn(move || f(tx))
+}
+
 /// Main function to control the interactive
 /// run of the script.
 /// It takes in an array of children, initializes
@@ -33,19 +41,10 @@ use super::{
 /// let streams = Vec::from(Stream::new("Facetime", None, "output.mp4"));
 /// let devices = get_devices();
 /// let launch_result = launch(streams, devices);
-/// if launch_result.is_err() {
-///     match launch_result {
-///         IResult::Incomplete(t, e) => {
-///             let _ = t.cleanup(None);
-///             println!("Incomplete launch with error: {e}");
-///         },
-///         IResult::Error(e) => {
-///             println!("Error: {e}");
-///         }
-///     };
-/// } else {
-///     let children = launch_result.unwrap();
-///     control_panel(children);
+/// let children = launch_result.unwrap_with(|children| {
+///     children.cleanup(None)
+/// });
+/// control_panel(children);
 /// }
 /// ```
 pub(crate) fn control_panel(children: Children) {
@@ -60,9 +59,7 @@ pub(crate) fn control_panel(children: Children) {
     let monitor_handle = thread::spawn(move || {
         ffmpeg::monitor(monitor_children, monitor_stop, tx);
     });
-    thread::spawn(move || {
-        user_control(tuser);
-    });
+    launch_control_thread(user_control, tuser);
     for message in rx {
         match message {
             StopStatus::Exited(id) => {
