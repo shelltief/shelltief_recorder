@@ -3,15 +3,20 @@
 //! A module to overwrite the default Child structure that
 //! `std::process` provides
 use crate::control::StopStatus::{self, Panic};
-use super::Signal;
+use super::{ExitStatus, Signal};
 use std::{
     ops::{Deref, DerefMut},
-    process::{self, ExitStatus},
+    process,
     ffi::CStr,
     io::{self, Error, ErrorKind},
     sync::mpsc::Sender,
 };
 use libc::{self, c_int, pid_t, SIGKILL};
+
+// For `is_running` function
+use libc::{WNOHANG, WUNTRACED, WCONTINUED,
+WIFEXITED, WIFSIGNALED, WEXITSTATUS, WTERMSIG,
+WIFSTOPPED, WSTOPSIG, waitpid, c_char, perror};
 
 /// A Child structure that holds the child exit status if
 /// the child already exited and none otherwise.
@@ -181,7 +186,7 @@ impl Child {
             Ok(Some(status)) => {
                 self.status = Some(status);
                 false
-            },
+            }
             Ok(None) => true,
             Err(e) => {
                 let error = format!("Error: {e} in try_wait function");
@@ -191,6 +196,25 @@ impl Child {
                 panic!("Error in try_wait function");
             },
         }
+    }
+
+    pub(super) fn try_wait(&mut self) -> Result<Option<c_int>, String> {
+        let mut status: c_int;
+        let pid: c_int = unsafe {
+            waitpid(self.id(), &mut status as *mut c_int, WNOHANG | WCONTINUED | WUNTRACED )
+        };
+        if pid == -1 {
+            let err = unsafe { format!("{}", perror("waitpid" as *const c_char)) };
+            return Err(err);
+        }
+        if WIFEXITED(status) {
+            return Ok(Some(WEXITSTATUS(status)));
+        } else if WIFSIGNALED(status) {
+            return Ok(Some(WTERMSIG(status)));
+        } else if WIFSTOPPED(status) {
+            return Ok(Some(WSTOPSIG(status)));
+        }
+        Ok(None)
     }
 }
 
