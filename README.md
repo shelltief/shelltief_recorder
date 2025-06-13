@@ -1,5 +1,7 @@
 # shelltief-recorder
 
+> This is a *read-only* mirror. The original version lives on [Gitlab](https://gitlab.com/shelltief/shelltief_recorder/)
+
 A dead-simple Bash script to record your screen, webcam, and mic simultaneously — all from the terminal.
 
 Built for:
