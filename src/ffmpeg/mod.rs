@@ -1,5 +1,6 @@
 mod child;
 mod children;
+mod exit_status;
 mod iresult;
 mod monitor;
 mod parsing;
@@ -10,6 +11,7 @@ mod types;
 pub(super) use record::{
     launch,
 };
+use exit_status::ExitStatus;
 use types::*;
 pub(super) use types::{
     Devices,
