@@ -69,7 +69,7 @@ impl<'a> Stream<'a> {
             let audio = devices.get_index(audio, Audio)
                 .map_err(|e| Error::new(ErrorKind::Other, e))?;
             #[cfg(debug_assertions)]
-            println!("{:#?}", audio);
+            println!("audio device index: {:#?}", audio);
             ffmpeg_command
                 .arg("-audio_device_index")
                 .arg(audio.to_string());

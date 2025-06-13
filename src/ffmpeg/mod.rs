@@ -1,9 +1,10 @@
 mod child;
 mod children;
+mod iresult;
 mod monitor;
 mod parsing;
-mod iresult;
 mod record;
+mod signal;
 mod stream;
 mod types;
 pub(super) use record::{
@@ -22,3 +23,4 @@ pub(super) use monitor::{
     MonitorAction,
     monitor,
 };
+pub(super) use signal::Signal;

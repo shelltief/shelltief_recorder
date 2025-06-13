@@ -3,6 +3,7 @@
 //! A module to overwrite the default Child structure that
 //! `std::process` provides
 use crate::control::StopStatus::{self, Panic};
+use super::Signal;
 use std::{
     ops::{Deref, DerefMut},
     process::{self, ExitStatus},
@@ -79,16 +80,16 @@ impl Child {
     /// let child = Child::new(command.spawn().expect("sleep command failed"));
     /// child.terminate(Some(SIGINT));
     /// ```
-    pub(super) fn terminate(&mut self, sig: Option<c_int>)
+    pub(super) fn terminate(&mut self, sig: Option<Signal>)
     {
-        let default_kill: bool = matches!(sig, None | Some(SIGKILL));
+        let default_kill: Signal = sig.unwrap_or(Signal::new(SIGKILL));
         let id: u32 = self.id();
-        let res: io::Result<()> = if default_kill {
+        let res: io::Result<()> = if default_kill == Signal::new(SIGKILL){
             self.kill()
         } else {
             let sig = sig.unwrap();
             let ret: c_int = unsafe {
-                libc::kill(id as pid_t, sig)
+                libc::kill(id as pid_t, *sig)
             };
             match ret {
                 0 => Ok(()),
@@ -104,7 +105,10 @@ impl Child {
                 _ => unreachable!("`kill` should only return 0 or -1"),
             }
         };
-        if let Err(_) = res {
+        if let Err(e) = res {
+            eprintln!("Error while killing child: {0}, {1:#?}", self.id(), e);
+        }
+        if let Ok(None) = self.try_wait() {
             self.kill().expect("Bro, this guy won't budge");
         }
     }

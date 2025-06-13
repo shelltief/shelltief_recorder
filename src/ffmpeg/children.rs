@@ -1,8 +1,7 @@
 //! Implementation of the newtype pattern to wrap
 //! a vector of `ffmpeg::Child` and add it some
 //! functionnalities
-use super::{Child, ChildResult};
-use libc::c_int;
+use super::{Child, ChildResult, Signal};
 use std::{
     io::{self},
     iter::IntoIterator,
@@ -100,7 +99,7 @@ impl Children {
     ///
     /// If there is an error in the second firing of the `kill` signal (in
     /// `child.terminate`)
-    pub(crate) fn cleanup(&mut self, sig: Option<c_int>)
+    pub(crate) fn cleanup(&mut self, sig: Option<Signal>)
     -> Vec<ChildResult<ExitStatus, io::Error>>
     {
         let mut results: Vec<ChildResult<ExitStatus, io::Error>> = Vec::new();

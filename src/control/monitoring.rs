@@ -2,6 +2,7 @@ use crate::ffmpeg::{
     self,
     Children,
     MonitorAction,
+    Signal,
 };
 use libc::SIGINT;
 use std::{
@@ -86,5 +87,5 @@ pub(crate) fn control_panel(children: Children) {
 only one alive");
     let mut children = children.into_inner()
         .expect("Value should be retrievable");
-    children.cleanup(Some(SIGINT));
+    children.cleanup(Some(Signal::new(SIGINT)));
 }
