@@ -1,5 +1,8 @@
 use shellrecord;
 
 fn main() {
-    let _ = shellrecord::run();
+    let res = shellrecord::run();
+    if res.is_err() {
+        eprintln!("{}", res.unwrap_err());
+    }
 }

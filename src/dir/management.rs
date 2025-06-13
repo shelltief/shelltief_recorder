@@ -35,7 +35,7 @@ use std::{
 /// - If `project_path` isn't readable and executable
 /// - If `dirname` contains non-unicode chars
 /// - If `current` dir isn't properly renamed
-pub(crate) fn archive_current(project_path: &str) -> Result<(), String>{
+pub(crate) fn archive_current(project_path: &str) -> Result<String, String>{
     let project_path = if let Some(path) = project_path.strip_suffix("/") {
         path
     } else {
@@ -64,13 +64,12 @@ pub(crate) fn archive_current(project_path: &str) -> Result<(), String>{
         } else if entry.chars().next().unwrap() > '9'{
             break;
         }
-        println!("{:#?}", entry);
     }
     let last_dir = (last_dir + 1).to_string();
     let last_dir = project_path.to_owned() + "/" + &last_dir;
-    fs::rename(current_path, last_dir)
+    fs::rename(current_path, &last_dir)
         .expect("Dir should be properly renamed");
-    Ok(())
+    Ok(last_dir)
 }
 
 /// Initializes the project directory within the target
@@ -93,7 +92,7 @@ pub(crate) fn archive_current(project_path: &str) -> Result<(), String>{
 /// - If `project_path` can't be created by the `DirBuilder`
 /// - If `project_path` isn't searchable
 pub(crate) fn init_project_dir(dir_path: &str, project_name: &str)
--> Result<String, String> {
+-> Result<(String, String), String> {
     let dir_path = if let Some(path) = dir_path.strip_suffix("/") {
         path
     } else {
@@ -104,22 +103,28 @@ pub(crate) fn init_project_dir(dir_path: &str, project_name: &str)
     } else {
         project_name
     };
-    let result = fs::exists(dir_path);
-    let result = result.unwrap();
-    if ! result {
+    let exists = fs::exists(&dir_path)
+        .map_err(|_e| {format!("error trying to retrieve: '{dir_path}'")})?;
+    if ! exists {
         return Err(format!("'{dir_path}' should exist"));
     }
     let project_path = dir_path.to_string() + "/" + project_name;
+    let exists = fs::exists(&project_path)
+        .map_err(|_e| {format!("error trying to retrieve: '{project_path}'")})?;
+    if ! exists {
+        return Err(format!("'{project_path}' should exist"));
+    }
+    eprintln!("'{project_path}' exists");
     let current_path = project_path.clone() + "/" + "current";
-    DirBuilder::new()
-        .recursive(true)
-        .create(&project_path)
-        .expect("Path should be created");
     let exists = fs::exists(&current_path)
         .expect("project directory should be searchable");
     if exists {
         let _ = fs::remove_dir_all(&current_path)
             .map_err(|e| {e.to_string()})?;
     }
-    Ok(project_path)
+    DirBuilder::new()
+        .recursive(true)
+        .create(&current_path)
+        .expect("Path should be created");
+    Ok((project_path, current_path))
 }

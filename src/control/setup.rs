@@ -10,7 +10,7 @@ use crate::{
 };
 use super::user_continues;
 
-pub(crate) fn setup() -> Result<String, String> {
+pub(crate) fn setup() -> Result<(String, String), String> {
     let projects_path: &str = if let Some(path) = PROJECTS_PATH.strip_suffix("/") {
         path
     } else {
@@ -24,7 +24,6 @@ pub(crate) fn setup() -> Result<String, String> {
     if ! user_continues("Would you like to continue?") {
         return Err(String::from("User didn't wish to continue"));
     }
-    let project_dir = init_project_dir(projects_path, "name")
-        .map_err(|e| format!("Couldn't initialize project dir: '{}'", e))?;
-    Ok(project_dir)
+    init_project_dir(projects_path, "name")
+        .map_err(|e| format!("Couldn't initialize project dir: '{}'", e))
 }

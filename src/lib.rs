@@ -13,15 +13,16 @@ use ffmpeg::{
 };
 
 
-pub fn run() -> Result<(), String>{
-    let project_path = setup()?;
-    println!("Project_path is : '{project_path}'");
+pub fn run() -> Result<(), String> {
+    let (project_path, current_path) = setup()?;
     let devices = get_devices();
-    let face = Stream::new("FaceTime", Some("MacBook"), "face.mp4", Some(&project_path));
-    let screen = Stream::new("Capture screen 0", None, "screen.mp4", Some(&project_path));
+    let face = Stream::new("FaceTime", Some("MacBook"), "face.mp4", Some(&current_path));
+    let screen = Stream::new("Capture screen 0", None, "screen.mp4", Some(&current_path));
     let streams: Vec<Stream> = vec![face, screen];
     let res = ffmpeg::launch(streams, devices);
     let children = res.unwrap_with(|mut c| {c.cleanup(None);});
     control_panel(children);
-    archive_current(&project_path)
+    let archive = archive_current(&project_path)?;
+    println!("Session archived at : {archive}");
+    Ok(())
 }
