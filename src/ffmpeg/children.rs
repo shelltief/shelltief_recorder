@@ -1,7 +1,7 @@
 //! Implementation of the newtype pattern to wrap
 //! a vector of `ffmpeg::Child` and add it some
 //! functionnalities
-use super::{Child, ChildResult, Signal};
+use super::{Child, ChildResult, ExitStatus, Signal};
 use std::{
     io::{self},
     iter::IntoIterator,
@@ -9,7 +9,6 @@ use std::{
         Deref,
         DerefMut,
     },
-    process::ExitStatus,
     slice::{
         Iter,
         IterMut,

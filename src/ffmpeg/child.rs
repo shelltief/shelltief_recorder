@@ -3,12 +3,14 @@
 //! A module to overwrite the default Child structure that
 //! `std::process` provides
 use crate::control::StopStatus::{self, Panic};
-use super::{ExitStatus, Signal};
+use super::{ExitStatus::{self, *}, Signal};
 use std::{
-    ops::{Deref, DerefMut},
-    process,
+    convert::From,
     ffi::CStr,
     io::{self, Error, ErrorKind},
+    mem::MaybeUninit,
+    ops::{Deref, DerefMut},
+    process,
     sync::mpsc::Sender,
 };
 use libc::{self, c_int, pid_t, SIGKILL};
@@ -16,7 +18,7 @@ use libc::{self, c_int, pid_t, SIGKILL};
 // For `is_running` function
 use libc::{WNOHANG, WUNTRACED, WCONTINUED,
 WIFEXITED, WIFSIGNALED, WEXITSTATUS, WTERMSIG,
-WIFSTOPPED, WSTOPSIG, waitpid, c_char, perror};
+WIFSTOPPED, WSTOPSIG, waitpid, c_char};
 
 /// A Child structure that holds the child exit status if
 /// the child already exited and none otherwise.
@@ -45,6 +47,15 @@ impl Deref for Child {
 impl DerefMut for Child {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.child
+    }
+}
+
+impl From<process::Child> for Child {
+    fn from(value: process::Child) -> Self {
+        Child {
+            child: value,
+            status: None,
+        }
     }
 }
 
@@ -136,7 +147,8 @@ impl Child {
     pub(super) fn wait(&mut self)
     -> ChildResult<ExitStatus, io::Error>
     {
-        let res: Result<ExitStatus, io::Error> = process::Child::wait(self);
+        let res: Result<ExitStatus, io::Error> = process::Child::wait(self)
+            .map(|status| {ExitStatus::from(status)});
         ChildResult{id: self.id(), res}
     }
 
@@ -198,21 +210,45 @@ impl Child {
         }
     }
 
-    pub(super) fn try_wait(&mut self) -> Result<Option<c_int>, String> {
-        let mut status: c_int;
+/// Overwrite of [`std::process::Child::try_wait`] to provide a more precise
+/// insight about whether or not a process is running.
+///
+/// # Examples
+///
+/// ```ignore
+/// use std::process::Command;
+/// use ffmpeg::{Child, ExitStatus};
+///
+/// let child = Command::new(sleep)
+///     .arg("3").spawn()?;
+/// let child = Child::from(child);
+/// match child.try_wait() {
+///     Ok(Some(status)) => println!("Status is : {:#?}", status),
+///     None => println!("Child is still running"),
+/// };
+/// ```
+    pub(super) fn try_wait(&mut self) -> Result<Option<ExitStatus>, String> {
+        let mut status = MaybeUninit::<c_int>::uninit();
         let pid: c_int = unsafe {
-            waitpid(self.id(), &mut status as *mut c_int, WNOHANG | WCONTINUED | WUNTRACED )
+            waitpid(self.id() as i32, status.as_mut_ptr(), WNOHANG | WCONTINUED | WUNTRACED )
         };
+        let status: c_int = unsafe {status.assume_init()};
         if pid == -1 {
-            let err = unsafe { format!("{}", perror("waitpid" as *const c_char)) };
+            let err = unsafe {
+                let errno: *mut c_int = libc::__error();
+                let errstring: *mut c_char = libc::strerror(*errno);
+                CStr::from_ptr(errstring)
+                    .to_string_lossy()
+                    .into_owned()
+            };
             return Err(err);
         }
         if WIFEXITED(status) {
-            return Ok(Some(WEXITSTATUS(status)));
+            return Ok(Some(Exited(WEXITSTATUS(status))));
         } else if WIFSIGNALED(status) {
-            return Ok(Some(WTERMSIG(status)));
+            return Ok(Some(Signaled(Some(Signal::new(WTERMSIG(status))))));
         } else if WIFSTOPPED(status) {
-            return Ok(Some(WSTOPSIG(status)));
+            return Ok(Some(Stopped(Some(Signal::new(WSTOPSIG(status))))));
         }
         Ok(None)
     }

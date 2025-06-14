@@ -6,7 +6,7 @@
 use libc::c_int;
 use std::ops::Deref;
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub(crate) struct Signal(c_int);
 
 impl Deref for Signal {

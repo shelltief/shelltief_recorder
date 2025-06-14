@@ -11,7 +11,7 @@ mod types;
 pub(super) use record::{
     launch,
 };
-use exit_status::ExitStatus;
+pub(super) use exit_status::ExitStatus;
 use types::*;
 pub(super) use types::{
     Devices,
