@@ -111,10 +111,10 @@ impl Child {
                 0 => Ok(()),
                 -1 => {
                     let error = unsafe {
-                    let err: *mut c_int = libc::__error();
-                    let slice = CStr::from_ptr(libc::strerror(*err));
-                    slice.to_str()
-                        .expect("Return value from strerror should be UTF-8")
+                        let err: *mut c_int = libc::__error();
+                        let slice = CStr::from_ptr(libc::strerror(*err));
+                        slice.to_string_lossy()
+                            .to_owned()
                     };
                     Err(Error::new(ErrorKind::Other, error))
                 },
@@ -232,6 +232,9 @@ impl Child {
         let pid: c_int = unsafe {
             waitpid(self.id() as i32, status.as_mut_ptr(), WNOHANG | WCONTINUED | WUNTRACED )
         };
+        if pid == 0 {
+            return Ok(None);
+        }
         let status: c_int = unsafe {status.assume_init()};
         if pid == -1 {
             let err = unsafe {
