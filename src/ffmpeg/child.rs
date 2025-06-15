@@ -123,8 +123,6 @@ impl Child {
         };
         if let Err(e) = res {
             eprintln!("Error while killing child: {0}, {1:#?}", self.id(), e);
-        }
-        if let Ok(None) = self.try_wait() {
             self.kill().expect("Bro, this guy won't budge");
         }
     }
