@@ -48,6 +48,7 @@ pub(crate) fn archive_current(project_path: &str) -> Result<String, String>{
         return Err(format!("'{current_path}' directory not found"));
     }
 
+    let mut dir_numbers: Vec<u8> = Vec::new();
     let mut entries = fs::read_dir(project_path)
         .expect("'project_path' should be readable")
         .map(|res| res.map(|e| e.file_name()))
@@ -60,13 +61,17 @@ pub(crate) fn archive_current(project_path: &str) -> Result<String, String>{
             .expect("dirname should contain only unicode chars");
         let dirname = entry.parse::<u8>();
         if dirname.is_ok() {
-            last_dir = dirname.unwrap();
+            dir_numbers.push(dirname.unwrap());
         } else if entry.chars().next().unwrap() > '9'{
             break;
         }
     }
-    let last_dir = (last_dir + 1).to_string();
+    dir_numbers.sort();
+    let last_dir = dir_numbers.pop()
+        .map_or(0, |last| {last + 1})
+        .to_string();
     let last_dir = project_path.to_owned() + "/" + &last_dir;
+    eprintln!("Last dir is : {}", &last_dir);
     fs::rename(current_path, &last_dir)
         .expect("Dir should be properly renamed");
     Ok(last_dir)
