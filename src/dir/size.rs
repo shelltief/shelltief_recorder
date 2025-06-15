@@ -6,6 +6,7 @@
 
 use std::{
     ffi::CString,
+    fs,
     mem::MaybeUninit,
 };
 use libc;
@@ -27,7 +28,10 @@ use libc;
 /// # Panics
 ///
 /// - If path string can't be created
-pub(crate) fn size_available(path: &str) -> f64 {
+pub(crate) fn size_available(path: &str) -> Result<f64, String> {
+    if ! fs::exists(path).map_err(|e| {format!("Got error: '{e}'")})? {
+        return Err(format!("Path: '{path}' doesn't exist"));
+    }
     let path = CString::new(path.as_bytes())
         .expect("Failure while creating path string");
     let mut buf: MaybeUninit<libc::statvfs>;
@@ -38,5 +42,5 @@ pub(crate) fn size_available(path: &str) -> f64 {
     let buf = unsafe { buf.assume_init() };
     let blocks = buf.f_frsize * buf.f_bavail as u64;
     let size: f64 = blocks as f64/ 1e9;
-    size
+    Ok(size)
 }
