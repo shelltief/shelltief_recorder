@@ -7,7 +7,7 @@ use std::convert::TryFrom;
 /// enum to register an option
 /// Can be either an option without a provided argument
 /// or an option with an array of arguments
-pub(crate) enum CliOption {
+enum CliOption {
     Noarg(String),
     Argument{opt: String, args: Vec<String>},
 }
@@ -37,17 +37,16 @@ fn get_option(args: &Vec<String>, i: &mut usize) -> Result<CliOption, String> {
     Ok(CliOption::Argument{opt, args: optargs})
 }
 
-pub(crate) fn parse_command_line(args: Vec<String>) -> Result<Option<Command>, String>
+pub(crate) fn parse_command_line() -> Result<Command, String>
 {
+    let args: Vec<String> = std::env::args().collect();
     let mut i: usize = 0;
     if args.len() == 0 {
-        return Ok(None);
+        return Err(String::from("No command line provided"));
     }
     let mut parsed_opts: Vec<CliOption> = Vec::new();
     let mut parsed_args: Vec<String> = Vec::new();
-    let mut arg: String;
     while i < args.len() && args[i] != "--" && args[i].starts_with("-") {
-        arg = args[i].clone();
         parsed_opts.push(get_option(&args, &mut i)?);
     }
     if i < args.len() && args[i] == "--" {
@@ -58,15 +57,15 @@ pub(crate) fn parse_command_line(args: Vec<String>) -> Result<Option<Command>, S
         i += 1;
     }
     if parsed_opts.len() == 0 {
-        return Ok(Some(Command{
+        return Ok(Command{
             opts: None,
             args: parsed_args,
-        }));
+        });
     }
-    Ok(Some(Command{
+    Ok(Command{
         opts: Some(parsed_opts),
         args: parsed_args,
-    }))
+    })
 }
 
 impl TryFrom<CliOption> for Stream {
@@ -74,10 +73,13 @@ impl TryFrom<CliOption> for Stream {
 
     fn try_from(value: CliOption) -> Result<Self, Self::Error> {
         match value {
-            CliOption::Noarg(arg) => Err(String::from("No argument provided for stream")),
+            CliOption::Noarg(_) => Err(String::from("No argument provided for stream")),
             CliOption::Argument{opt, args} => {
                 if opt != "stream" && opt != "s" {
                     return Err(format!("Option '{opt}' is not 'stream' or 's' "));
+                }
+                if ! args[args.len() - 1].ends_with(".mp4") {
+                    return Err(format!("Argument: '{}' is not an mp4 file", args[args.len() - 1]));
                 }
                 match args.len() {
                     2 => Ok(Stream::new(args[0].clone(), None, args[1].clone(), None)),
@@ -93,18 +95,25 @@ impl TryFrom<CliOption> for Stream {
 
 fn help() {
     let help_str = "
-shellrecord [--stream|-s video [audio] output] [--path|-p project_dir_path] project_name
+shellrecord [--stream|-s video [audio] output] [--path|-p project_dir_path] [--help|-h]\
+[--list|-l] project_name
 
---stream|-s video [audio] output
-    specifies video stream (with optional audio) to capture
+--help|-h
+    print this help message and exit
+
+--list|-l
+    list AvFoundation devices and exit
 
 --path|-p project_dir_path
     specifies path in which to look for project name directory
+
+--stream|-s video [audio] output
+    specifies video stream (with optional audio) to capture
 ";
     eprintln!("{help_str}");
 }
 
-pub(super) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, Option<String>), String> {
+pub(crate) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, String), String> {
     let Command{opts, args} = command;
     if args.len() != 1 {
         return Err(String::from("project_name should be the only argument"));
@@ -126,15 +135,15 @@ pub(super) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, Op
                 eprintln!("{:#?}", get_devices());
                 return Err(String::new());
             }
-            CliOption::Noarg(opt) => return Err(String::from("Illegal option '{opt}'")),
-            CliOption::Argument{ref opt, ref args} if opt == "stream" || opt == "s" => {
+            CliOption::Noarg(_) => return Err(String::from("Illegal option '{opt}'")),
+            CliOption::Argument{ref opt, args: _} if opt == "stream" || opt == "s" => {
                 streams.push(Stream::try_from(option)?);
             },
             CliOption::Argument{opt, args} if opt == "path" || opt == "p" => {
                 if args.len() != 1 {
                     return Err(format!("project path should be the only argument to option: '{opt}'"));
                 }
-                if let Some(path) = project_path {
+                if let Some(_path) = project_path {
                     return Err(String::from("Multiple project paths provided"));
                 }
                 project_path = Some(args[0].clone());
@@ -142,5 +151,9 @@ pub(super) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, Op
             CliOption::Argument{opt,args: _} => return Err(format!("Illegal option: '{opt}' detected")),
         }
     }
-    Ok((streams, project_name, project_path))
+    Ok((streams, project_name, project_path.unwrap_or_else(|| {
+        std::env::current_dir()
+            .expect("Current dir should be readable")
+            .to_string_lossy()
+            .into_owned()})))
 }
