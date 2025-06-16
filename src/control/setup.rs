@@ -1,6 +1,5 @@
 use crate::{
         defaults::{
-            PROJECTS_PATH,
             THRESHOLD,
         },
         dir::{
@@ -9,18 +8,20 @@ use crate::{
         },
 };
 use super::user_continues;
-use std::process::{Command, Stdio};
+use std::{
+    process::{Command, Stdio},
+};
 
-pub(crate) fn setup() -> Result<(String, String), String> {
-    let projects_path: &str = if let Some(path) = PROJECTS_PATH.strip_suffix("/") {
+pub(crate) fn setup(project_path: String, name: String) -> Result<(String, String), String> {
+    let projects_path: &str = if let Some(path) = project_path.strip_suffix("/") {
         path
     } else {
-        PROJECTS_PATH
+        &project_path[..]
     };
     let size = size_available(projects_path)?;
     eprintln!("Size is : {0:.2}G", size);
     if size < THRESHOLD as f64 {
-        return Err(format!("Size is under the threshold: '{THRESHOLD}'."));
+        return Err(format!("Size available is under the threshold: '{THRESHOLD:.2}G'."));
     }
     if ! user_continues("Would you like to continue?") {
         return Err(String::from("User didn't wish to continue"));
@@ -29,7 +30,7 @@ pub(crate) fn setup() -> Result<(String, String), String> {
         return Err(String::from("ffmpeg is running, \
 please stop all your ffmpeg processes before attempting to run the script"));
     }
-    init_project_dir(projects_path, "name")
+    init_project_dir(projects_path, &name)
         .map_err(|e| format!("Couldn't initialize project dir: '{}'", e))
 }
 
@@ -39,7 +40,7 @@ fn ffmpeg_running() -> Result<bool, String> {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
-        .map_err(|e| {String::from("Error in pgrep command, can't check ffmpeg process")})?
+        .map_err(|_e| {String::from("Error in pgrep command, can't check ffmpeg process")})?
         .wait()
         .map_err(|e| {format!("Got error: '{e}'")})?
         .success();
