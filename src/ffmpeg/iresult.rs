@@ -9,6 +9,7 @@ pub(crate) enum IResult<T,E> {
     Err(E),
 }
 
+#[allow(dead_code)]
 impl<T,E> IResult<T,E> {
     pub(crate) fn is_err(&self) -> bool {
         match self {

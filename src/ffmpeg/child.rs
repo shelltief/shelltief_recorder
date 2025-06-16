@@ -31,6 +31,7 @@ pub(crate) struct Child {
 /// A result that also holds a child id to identify the exited child
 #[must_use = "The `ChildResult` contains a `Result`, which should be checked for
 possible failures"]
+#[allow(dead_code)]
 pub(crate) struct ChildResult<T,E>{
     id: u32,
     res: Result<T,E>

@@ -12,6 +12,7 @@ use std::{
 /// An enum that holds the different
 /// states in which a process can exit
 #[derive(Clone, Copy, Debug)]
+#[allow(dead_code)]
 pub(crate) enum ExitStatus {
     Exited(i32),
     Signaled(Option<Signal>),

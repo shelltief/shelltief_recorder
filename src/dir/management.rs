@@ -55,7 +55,6 @@ pub(crate) fn archive_current(project_path: &str) -> Result<String, String>{
         .collect::<Result<Vec<_>, io::Error>>()
         .unwrap();
     entries.sort();
-    let mut last_dir: u8 = 0;
     for entry in entries {
         let entry = entry.into_string()
             .expect("dirname should contain only unicode chars");
