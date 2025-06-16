@@ -8,18 +8,18 @@ use super::{
 
 /// A struct to package all the stream information
 /// in one place in order to make the launch easier
-pub(crate) struct Stream<'a> {
-    pub(super) video: &'a str,
-    pub(super) audio: Option<&'a str>,
-    pub(super) output: &'a str,
-    pub(super) path: Option<&'a str>,
+pub(crate) struct Stream {
+    pub(super) video: String,
+    pub(super) audio: Option<String>,
+    pub(super) output: String,
+    pub(super) path: Option<String>,
 }
 
-impl<'a> Stream<'a> {
+impl Stream {
     /// Creates a new `Stream`
-    pub(crate) fn new(video: &'a str, audio: Option<&'a str>, output: &'a str,
-                      path: Option<&'a str>)
--> Stream<'a> {
+    pub(crate) fn new(video: String, audio: Option<String>, output: String,
+                      path: Option<String>)
+-> Stream {
         Stream {
             video,
             audio,
@@ -29,12 +29,12 @@ impl<'a> Stream<'a> {
     }
 
     pub(crate) fn output_file(&self) -> String {
-        let output = if let Some(path) = self.path {
+        let output = if let Some(path) = self.path.clone() {
             path.to_owned()
         } else {
             String::new()
         };
-        output + "/" + self.output
+        output + "/" + &self.output
     }
 
     /// Launch recording for one stream
@@ -45,12 +45,14 @@ impl<'a> Stream<'a> {
     /// use super::get_devices;
     ///
     /// let devices = get_devices();
-    /// let stream = Stream::new("FaceTime", Some("MacBook Air Microphone"), "output.mp4", None);
+    /// let stream = Stream::new(String::from("FaceTime"),
+    ///     Some(String::from("MacBook Air Microphone")),
+    ///     String::from("output.mp4"), None);
     /// let launch_result = stream.record(&Devices);
     /// ```
     pub(crate) fn record(&self, devices: &Devices) -> io::Result<Child>
     {
-        let video = devices.get_index(self.video, Video)
+        let video = devices.get_index(&self.video, Video)
             .map_err(|e| Error::new(ErrorKind::Other, e))?;
         #[cfg(debug_assertions)]
         println!("video device index: {:#?}", video);
@@ -65,7 +67,7 @@ impl<'a> Stream<'a> {
         ffmpeg_command
             .arg("-video_device_index")
             .arg(video.to_string());
-        if let Some(audio) = self.audio {
+        if let Some(audio) = &self.audio {
             let audio = devices.get_index(audio, Audio)
                 .map_err(|e| Error::new(ErrorKind::Other, e))?;
             #[cfg(debug_assertions)]
@@ -81,5 +83,9 @@ impl<'a> Stream<'a> {
             .stdout(Stdio::null());
         let child = ffmpeg_command.spawn()?;
         Ok(Child::new(child))
+    }
+
+    pub(crate) fn set_path(self: &mut Self, path: &str) {
+        self.path = Some(path.to_owned());
     }
 }
