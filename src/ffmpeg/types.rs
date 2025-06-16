@@ -18,3 +18,15 @@ pub(super) enum DeviceType {
     Audio,
 }
 
+impl Devices {
+    pub(crate) fn list(&self) {
+        println!("---Video Devices---");
+        for device in &self.video {
+            println!("Name: {} -- Index: {}", &device.name, &device.idx);
+        }
+        println!("---Audio Devices---");
+        for device in &self.audio {
+            println!("Name: {} -- Index: {}", &device.name, &device.idx);
+        }
+    }
+}

@@ -7,11 +7,13 @@ use std::convert::TryFrom;
 /// enum to register an option
 /// Can be either an option without a provided argument
 /// or an option with an array of arguments
+#[derive(Debug)]
 enum CliOption {
     Noarg(String),
     Argument{opt: String, args: Vec<String>},
 }
 
+#[derive(Debug)]
 pub(crate) struct Command {
     opts: Option<Vec<CliOption>>,
     args: Vec<String>,
@@ -39,10 +41,10 @@ fn get_option(args: &Vec<String>, i: &mut usize) -> Result<CliOption, String> {
 
 pub(crate) fn parse_command_line() -> Result<Command, String>
 {
-    let args: Vec<String> = std::env::args().collect();
+    let args: Vec<String> = std::env::args().skip(1).collect();
     let mut i: usize = 0;
     if args.len() == 0 {
-        return Err(String::from("No command line provided"));
+        help()?;
     }
     let mut parsed_opts: Vec<CliOption> = Vec::new();
     let mut parsed_args: Vec<String> = Vec::new();
@@ -93,7 +95,7 @@ impl TryFrom<CliOption> for Stream {
     }
 }
 
-fn help() {
+fn help() -> Result<(), String>{
     let help_str = "
 shellrecord [--stream|-s video [audio] output] [--path|-p project_dir_path] [--help|-h]\
 [--list|-l] project_name
@@ -111,31 +113,30 @@ shellrecord [--stream|-s video [audio] output] [--path|-p project_dir_path] [--h
     specifies video stream (with optional audio) to capture
 ";
     eprintln!("{help_str}");
+    Err(String::from("help"))
 }
 
 pub(crate) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, String), String> {
     let Command{opts, args} = command;
-    if args.len() != 1 {
-        return Err(String::from("project_name should be the only argument"));
-    }
-    let project_name = args[0].clone();
     if opts.is_none() {
-        return Err(String::from("at least one 'stream' argument should be present"));
+        let _ = help();
+        return Err(String::from("At least one `--stream` option should be present"));
     }
     let opts: Vec<CliOption> = opts.unwrap();
     let mut streams: Vec<Stream> = Vec::new();
     let mut project_path: Option<String> = None;
     for option in opts.into_iter() {
         match option {
-            CliOption::Noarg(opt) if opt == "h" || opt == "help" => {
-                help();
-                return Err(String::new());
-            },
+            CliOption::Noarg(opt) if opt == "h" || opt == "help" => help()?,
             CliOption::Noarg(opt) if opt == "l" || opt == "list" => {
-                eprintln!("{:#?}", get_devices());
-                return Err(String::new());
+                let devices = get_devices();
+                devices.list();
+                return Err(String::from("Listed Devices"));
             }
-            CliOption::Noarg(_) => return Err(String::from("Illegal option '{opt}'")),
+            CliOption::Noarg(opt) => {
+                let _ = help();
+                return Err(format!("Illegal option '{opt}'"));
+            },
             CliOption::Argument{ref opt, args: _} if opt == "stream" || opt == "s" => {
                 streams.push(Stream::try_from(option)?);
             },
@@ -151,6 +152,10 @@ pub(crate) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, St
             CliOption::Argument{opt,args: _} => return Err(format!("Illegal option: '{opt}' detected")),
         }
     }
+    if args.len() != 1 {
+        return Err(String::from("project_name should be the only argument"));
+    }
+    let project_name = args[0].clone();
     Ok((streams, project_name, project_path.unwrap_or_else(|| {
         std::env::current_dir()
             .expect("Current dir should be readable")

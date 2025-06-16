@@ -17,7 +17,7 @@ use ffmpeg::{
 #[cfg(target_os = "macos")]
 pub fn run() -> Result<(), String> {
     let command_line = parse_command_line()?;
-    let (mut streams, project_path, project_name) = parse_options(command_line)?;
+    let (mut streams, project_name, project_path) = parse_options(command_line)?;
     let (project_path, current_path) = setup(project_path, project_name)?;
     let devices = get_devices();
     for stream in &mut streams {
