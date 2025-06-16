@@ -1,3 +1,4 @@
+use crate::ffmpeg::Stream;
 use std::{
     sync::mpsc::Sender,
     io,
@@ -31,4 +32,18 @@ pub(super) fn user_continues(prompt: &str) -> bool {
         .expect("Line should be readable");
 
     matches!(input.trim(), "y" | "Y")
+}
+
+pub(crate) fn validate_settings(streams: &Vec<Stream>, preview: bool)
+-> Result<(), String>
+{
+    println!("The following streams are about to be recorded");
+    for stream in streams {
+        stream.display();
+    }
+    println!("The mode is : {}", if preview { "preview" } else { "record" });
+    if ! user_continues("Do you which to continue?") {
+        return Err(String::from("Settings weren't validated"));
+    }
+    Ok(())
 }

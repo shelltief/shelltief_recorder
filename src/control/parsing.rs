@@ -28,13 +28,13 @@ fn get_option(args: &Vec<String>, i: &mut usize) -> Result<CliOption, String> {
     }
     let opt = opt.trim_start_matches("-").to_owned();
     *i += 1;
-    if *i == args.len() {
-        return Ok(CliOption::Noarg(opt));
-    }
     let mut optargs: Vec<String> = Vec::new();
     while *i < args.len() && ! args[*i].starts_with("-") {
         optargs.push(args[*i].clone());
         *i += 1;
+    }
+    if optargs.is_empty() {
+        return Ok(CliOption::Noarg(opt));
     }
     Ok(CliOption::Argument{opt, args: optargs})
 }
@@ -109,6 +109,9 @@ shellrecord [--stream|-s video [audio] output] [--path|-p project_dir_path] [--h
 --path|-p project_dir_path
     specifies path in which to look for project name directory
 
+--preview|-P
+    Run `ffplay` instead of `ffmpeg` to preview the streams
+
 --stream|-s video [audio] output
     specifies video stream (with optional audio) to capture
 ";
@@ -116,7 +119,7 @@ shellrecord [--stream|-s video [audio] output] [--path|-p project_dir_path] [--h
     Err(String::from("help"))
 }
 
-pub(crate) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, String), String> {
+pub(crate) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, String, bool), String> {
     let Command{opts, args} = command;
     if opts.is_none() {
         let _ = help();
@@ -125,6 +128,7 @@ pub(crate) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, St
     let opts: Vec<CliOption> = opts.unwrap();
     let mut streams: Vec<Stream> = Vec::new();
     let mut project_path: Option<String> = None;
+    let mut preview: bool = false;
     for option in opts.into_iter() {
         match option {
             CliOption::Noarg(opt) if opt == "h" || opt == "help" => help()?,
@@ -133,6 +137,7 @@ pub(crate) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, St
                 devices.list();
                 return Err(String::from("Listed Devices"));
             }
+            CliOption::Noarg(opt) if opt == "P" || opt == "preview" => preview = true,
             CliOption::Noarg(opt) => {
                 let _ = help();
                 return Err(format!("Illegal option '{opt}'"));
@@ -149,7 +154,9 @@ pub(crate) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, St
                 }
                 project_path = Some(args[0].clone());
             },
-            CliOption::Argument{opt,args: _} => return Err(format!("Illegal option: '{opt}' detected")),
+            CliOption::Argument{opt,args: _} => {
+                return Err(format!("Illegal option: '{opt}' detected"));
+            },
         }
     }
     if args.len() != 1 {
@@ -160,5 +167,5 @@ pub(crate) fn parse_options(command: Command) -> Result<(Vec<Stream>, String, St
         std::env::current_dir()
             .expect("Current dir should be readable")
             .to_string_lossy()
-            .into_owned()})))
+            .into_owned()}), preview))
 }

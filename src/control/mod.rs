@@ -15,4 +15,5 @@ pub(crate) use monitoring::control_panel;
 pub(super) use setup::setup;
 pub(crate) use user::{
     StopStatus,
+    validate_settings,
 };

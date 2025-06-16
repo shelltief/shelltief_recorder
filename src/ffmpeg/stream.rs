@@ -1,5 +1,7 @@
 use std::io::{self, Error, ErrorKind};
-use std::process::{Command, Stdio};
+use std::{
+    process::{Command, Stdio},
+};
 use super::{
     Devices,
     DeviceType::*,
@@ -50,14 +52,17 @@ impl Stream {
     ///     String::from("output.mp4"), None);
     /// let launch_result = stream.record(&Devices);
     /// ```
-    pub(crate) fn record(&self, devices: &Devices) -> io::Result<Child>
+    pub(crate) fn record(&self, devices: &Devices, preview: bool) -> io::Result<Child>
     {
+        let bin = if preview {
+            "ffplay"
+        } else {
+            "ffmpeg"
+        };
         let video = devices.get_index(&self.video, Video)
             .map_err(|e| Error::new(ErrorKind::Other, e))?;
-        #[cfg(debug_assertions)]
-        println!("video device index: {:#?}", video);
         let framerate: u8 = 30;
-        let mut ffmpeg_command = Command::new("ffmpeg");
+        let mut ffmpeg_command = Command::new(bin);
         ffmpeg_command.arg("-f").arg("avfoundation");
         //Setting the framerate for displays that aren't the screen
         //TODO!: Fix (abstract) if it breaks
@@ -68,16 +73,18 @@ impl Stream {
             .arg("-video_device_index")
             .arg(video.to_string());
         if let Some(audio) = &self.audio {
-            let audio = devices.get_index(audio, Audio)
-                .map_err(|e| Error::new(ErrorKind::Other, e))?;
-            #[cfg(debug_assertions)]
-            println!("audio device index: {:#?}", audio);
-            ffmpeg_command
-                .arg("-audio_device_index")
-                .arg(audio.to_string());
+            if ! preview {
+                let audio = devices.get_index(audio, Audio)
+                    .map_err(|e| Error::new(ErrorKind::Other, e))?;
+                ffmpeg_command
+                    .arg("-audio_device_index")
+                    .arg(audio.to_string());
+            }
         }
-        ffmpeg_command.arg("-i").arg("\"\"")
-            .arg(self.output_file());
+        ffmpeg_command.arg("-i").arg("\"\"");
+        if ! preview {
+            ffmpeg_command.arg(self.output_file());
+        }
         ffmpeg_command.stderr(Stdio::null())
             .stdin(Stdio::null())
             .stdout(Stdio::null());
@@ -87,5 +94,15 @@ impl Stream {
 
     pub(crate) fn set_path(self: &mut Self, path: &str) {
         self.path = Some(path.to_owned());
+    }
+
+    pub(crate) fn display(self: &Self) {
+        println!("---Stream---");
+        println!("video: {}", self.video);
+        println!("audio: {}", self.audio
+                 .as_deref().unwrap_or_else(|| {"None"}));
+        println!("output: {}", self.output);
+        println!("output directory: {}", self.path.as_deref()
+                 .unwrap_or_else(|| {"."}));
     }
 }

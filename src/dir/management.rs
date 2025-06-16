@@ -70,7 +70,6 @@ pub(crate) fn archive_current(project_path: &str) -> Result<String, String>{
         .map_or(0, |last| {last + 1})
         .to_string();
     let last_dir = project_path.to_owned() + "/" + &last_dir;
-    eprintln!("Last dir is : {}", &last_dir);
     fs::rename(current_path, &last_dir)
         .expect("Dir should be properly renamed");
     Ok(last_dir)
@@ -118,7 +117,6 @@ pub(crate) fn init_project_dir(dir_path: &str, project_name: &str)
     if ! exists {
         return Err(format!("'{project_path}' should exist"));
     }
-    eprintln!("'{project_path}' exists");
     let current_path = project_path.clone() + "/" + "current";
     let exists = fs::exists(&current_path)
         .expect("project directory should be searchable");

@@ -13,8 +13,12 @@ use std::io::{self, Error, ErrorKind};
 /// use super::get_devices;
 ///
 /// let devices = get_devices();
-/// let stream = Stream::new("FaceTime", Some("MacBook Air Microphone"), "output.mp4");
-/// let stream1 = Stream::new("Capture screen 0", None, "screen.mp4");
+/// let stream = Stream::new(String::from("FaceTime"),
+///     Some(String::from("MacBook Air Microphone")),
+///     String::from("output.mp4"));
+/// let stream1 = Stream::new(String::from("Capture screen 0"),
+///     None,
+///     String::from("screen.mp4"));
 /// let streams: Vec<Stream> = Vec::from([stream, stream1]);
 /// let launch_result = launch(streams, devices);
 /// ```
@@ -23,7 +27,7 @@ use std::io::{self, Error, ErrorKind};
 ///
 /// If one of the `Child` doesn't launch properly
 
-pub(crate) fn launch(streams: Vec<Stream>, devices: Devices)
+pub(crate) fn launch(streams: Vec<Stream>, devices: Devices, preview: bool)
 -> IResult<Children, io::Error>
 {
     if streams.is_empty() {
@@ -39,7 +43,7 @@ pub(crate) fn launch(streams: Vec<Stream>, devices: Devices)
     }
     let mut children: Children = Children::new();
     for stream in streams {
-        let child = stream.record(&devices);
+        let child = stream.record(&devices, preview);
         if child.is_err() {
             return IResult::Incomplete(children, child.unwrap_err());
         }
