@@ -19,6 +19,7 @@ pub(crate) fn setup(project_path: String, name: String) -> Result<(String, Strin
         &project_path[..]
     };
     let size = size_available(projects_path)?;
+    eprintln!("Project path is : '{projects_path}'");
     eprintln!("Size is : {0:.2}G", size);
     if size < THRESHOLD as f64 {
         return Err(format!("Size available is under the threshold: '{THRESHOLD:.2}G'."));
