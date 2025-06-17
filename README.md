@@ -17,6 +17,11 @@ Built for:
 - Builders who prefer **terminal rituals over clicking buttons**
 - People who want to record **directly to disk** with zero overhead
 
+## Install
+
+The crate is *not yet* on `crate.io`, however you can install it
+with `cargo install --path .` from within the directory
+
 ## Stream
 
 This binary uses the concept of `stream` to work.
