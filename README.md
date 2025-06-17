@@ -1,79 +1,72 @@
-# shelltief-recorder
+# Shelltief Recorder
 
 > This is a *read-only* mirror. The original version lives on [Gitlab](https://gitlab.com/shelltief/shelltief_recorder/)
 
-A dead-simple Bash script to record your screen, webcam, and mic simultaneously — all from the terminal.
+A `Rust` binary to record your screen, webcam, and mic
+simultaneously, all form the terminal.
+
+> :warning: This script is `macOS` only as it uses `AvFoundation` backend
+> (a `macOS` specific implementation of screen capture)
+
+> :warning: For the binary to run properly, you need to have
+> `ffmpeg` installed and in your path. You can find more information
+> about ffmpeg on their [website](https://ffmpeg.org/download.html)
 
 Built for:
 - Developers who build and want to **document their process**
 - Builders who prefer **terminal rituals over clicking buttons**
 - People who want to record **directly to disk** with zero overhead
 
-## ⚙️ Features
+## Stream
 
-- Records your **screen** and **mic** (macOS only)
-- Detects and records your **webcam**, configurable via `DEVICE_1` (e.g. iPhone via Continuity Camera)
+This binary uses the concept of `stream` to work.
+A stream is defined by four variables:
+- Video input
+- Audio input (optionnal)
+- Ouput file (for now, the screen only allows `mp4` output format)
+- Recording path (optionnal) -> The path to a directory to which
+the recordings should be saved
+
+## Continuity Camera
+
+This binary can also record your iPhone through
+[`Continuity Camera`](https://support.apple.com/en-us/102546)
+
+This means that from your terminal window, you can launch a recording
+on your iPhone screen
+
+## Features
+
+- Records any stream you give it as an input
 - Saves to a `current/` directory, which is then auto-archived to `0/`, `1/`, `2/`, ...
-- Saves the sessions sizes in a `recording_sizes.log` file
-- If `current/` already exists, prompts to continue or archive it to a `fail/` directory
+- If `current/` already exists, wipes out its contents (so beware of
+checking what happens between two recordings)
+- **Preview mode**: Uses `ffplay` to allow you to preview the
+streams instead of recording
 - Manages process PIDs for clean starts and stops
-- Fully terminal-driven — no GUI
+- Fully terminal-driven
 
-## 🍏 macOS Only (for now)
-
-This script uses Apple's `avfoundation` backend and expects `ffmpeg` installed (via Homebrew or similar).
-
-To list available input devices:
-```bash
-ffmpeg -f avfoundation -list_devices true -i ""
-```
-
-The default iPhone camera name is set as:
+## Usage
 
 ```bash
-DEVICE_1=Nokia
+shellrecord [options] -- project_name
 ```
 
-Modify it in the script to match your iPhone name. For example, if your iPhone is named
-`iPhone de John` then you can change for:
+The project name argument is mandatory, and the `--` also to separate
+the options from the project_name
 
-```bash
-DEVICE_1=iPhone
-```
-
-* `"FaceTime"` is used as the fallback webcam
-
-🧠 **Tip:** Continuity Camera works only when your iPhone and Mac are on the same Wi-Fi, unlocked, and nearby. Once detected, the iPhone cam shows up wirelessly and can be used **without plugging it in.**
-
-> :information_desk_person: No worries if you don't have an iPhone, Continuity Camera won't be
-detected and the script will fall back to your camera as needed.
-
-> :bulb: As you might have guessed, if another camera is detected by the `avfoundation`
-backend, you will be able to use it by updating its name in the script
-
-## 🧪 Usage
-
-```bash
-./screen_recorder.sh your-project-name
-```
-
-
-The script uses the following path logic (edit this in the script as needed):
+Each option has a long and a short version, feel free to use the
+one that's most natural to you
 
 By default:
-- Recordings are saved under `/Volumes/T7/preferred/path/<project_name>`
-  - `T7` is the name of my SSD drive
-  - `preferred/path` is a path within this drive
-  - `<project_name>` is the name of the project provided on the command line.
-  The corresponding folder **must** exist before the script runs.
-  - Each project gets its own folder
-  - Each session gets stored in `0/`, `1/`, `2/`, etc. **Automatically**
-
-> :bulb: You can change this to any location on your machine — just update the `RECORDINGS_PATH` variable in the script.
+- Recordings are saved under the current directory `.` or `${PWD}`
+    - Each project gets its own folder
+    - Each session gets stored in `0/`, `1/`, `2/`, etc.
+**Automatically**
 
 > :warning: This script doesn’t currently check available storage — if your drive fills up
-mid-session, the recording will fail silently. Be mindful of free space, especially 
-when recording long sessions.
+> mid-session, the recording will fail silently.
+> Be mindful of free space, especially when recording long sessions.
 
 
 1. Run the script with your project name
@@ -81,30 +74,70 @@ when recording long sessions.
 3. Press any key to stop recording
 4. `current/` is automatically archived to a numbered folder
 
-## 📁 Directory Requirements
+## Directory Requirements
 
-- If `current/` is not empty, the script will prompt you to continue or archive its contents into `fail/`
+The `project_name` directory **must** be created within the
+`project_path` directory.
 
-## 💡 Why it matters
+## Suggested Workflow
 
-Because recording shouldn’t be a burden.
-Because **clicking record is slower than scripting it**.
-Because every dev deserves to document their journey — without breaking flow.
+1. List Available Devices
 
-## 🧱 Status
+```bash
+shellrecord -l
+```
 
-This is an early, raw version. But it works.
-Use it, fork it, break it, improve it.
+You'll then get an ouput like this one:
 
+```
+---Video Devices---
+Name: FaceTime HD Camera -- Index: 0
+Name: Nokia de Thibault Camera -- Index: 1
+Name: Capture screen 0 -- Index: 2
+Name: Capture screen 1 -- Index: 3
+---Audio Devices---
+Name: Microsoft Teams Audio -- Index: 0
+Name: MacBook Air Microphone -- Index: 1
+Name: Nokia de Thibault Microphone -- Index: 2
+```
 
-## 🚫 AI Training / Commercial Use
+You can then record the streams
+
+For example:
+```bash
+shellrecord --stream 'FaceTime HD Camera' 'MacBook Air Microphone' face.mp4 --stream 'Capture screen 1' screen.mp4 -- project_name
+```
+
+Will record:
+- FaceTime Camera with sound from macbook microphone
+- External display named 'Capture screen 1' with no sound
+Both will be recorded into the current path.
+
+<blockquote>
+
+This command could also be written as :
+```bash
+shellrecord --stream 0 1 face.mp4 --stream 3 screen.mp4 -- project_name
+```
+
+</blockquote>
+
+You can also use the `-P` (or `--preview`), to preview the streams
+before running the script
+
+```bash
+shellrecord --stream 0 1 face.mp4 --stream 3 screen.mp4 -P -- project_name
+```
+
+## AI Training / Commercial Use
 
 This project is released under a [GPL-3.0 license](LICENSE.md) with the following restrictions:
 
-🧠 **AI Training Prohibited**
+**AI Training Prohibited**
 You may NOT use this code to train, fine-tune, or power any machine learning system, including Copilot, ChatGPT, or similar tools.
 
-💰 **Commercial Use Requires a License**
+**Commercial Use Requires a License**
 If you intend to use this in a closed-source or for-profit project, you must contact me for a commercial license.
 
-> Built by [Shelltief](https://shelltief.sh) to document real work, in a smooth way.
+> Built by [Shelltief](https://shelltief.sh) to document work, in a
+> smooth way
