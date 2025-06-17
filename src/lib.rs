@@ -23,6 +23,7 @@ pub fn run() -> Result<(), String> {
     let devices = get_devices();
     for stream in &mut streams {
         stream.set_path(&current_path);
+        stream.readable_name(&devices)?;
     }
     let _ = validate_settings(&streams, preview)?;
     let res = ffmpeg::launch(streams, devices, preview);

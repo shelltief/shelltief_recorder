@@ -110,7 +110,8 @@ impl Devices {
     /// Returns the index in the `Ok` variant if only one corresponding
     /// device is found. Returns `Err` otherwise.
     pub(super) fn get_index(&self, name: &str, dtype: DeviceType)
-    -> Result<u8, String> {
+    -> Result<u8, String>
+    {
         let mut result: Option<u8> = None;
         let to_search: &Vec<AVFoundationDevice> = if dtype == DeviceType::Audio {
             &self.audio
@@ -131,6 +132,20 @@ impl Devices {
         }
         result.ok_or(format!("No {} device found starting with name: '{}'",
                              dtype, name))
+    }
+    pub(super) fn get_name(&self, index: usize, dtype: DeviceType)
+    -> Result<String, String>
+    {
+        let to_search: &Vec<AVFoundationDevice> = if dtype == DeviceType::Audio {
+            &self.audio
+        } else {
+            &self.video
+        };
+        if index >= to_search.len() {
+            return Err(format!("Index: '{}' is greather than array \
+of {} devices of length '{}'", index, dtype, to_search.len()));
+        }
+        Ok(to_search[index].name.clone())
     }
 }
 

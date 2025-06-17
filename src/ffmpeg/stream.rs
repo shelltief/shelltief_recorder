@@ -96,6 +96,20 @@ impl Stream {
         self.path = Some(path.to_owned());
     }
 
+    pub(crate) fn readable_name(&mut self, devices: &Devices)
+    -> Result<(), String>
+    {
+        if let Ok(idx) = self.video.parse::<usize>() {
+            self.video = devices.get_name(idx, Video)?;
+        }
+        if let Some(ref audio) = self.audio {
+            if let Ok(idx) = audio.parse::<usize>() {
+                self.audio = Some(devices.get_name(idx, Audio)?);
+            }
+        }
+        Ok(())
+    }
+
     pub(crate) fn display(self: &Self) {
         println!("---Stream---");
         println!("video: {}", self.video);
